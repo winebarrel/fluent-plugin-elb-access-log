@@ -73,3 +73,11 @@ Or install it yourself as:
   "request.uri.fragment":null
 }
 ```
+
+# Difference with [fluent-plugin-elb-log](https://github.com/shinsaka/fluent-plugin-elb-log)
+
+* Use AWS SDK for Ruby V2.
+* It is possible to change the record tag.
+* List objects with prefix.
+* Perse request line URI.
+* It has tests other than the configuration file.
