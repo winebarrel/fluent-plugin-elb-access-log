@@ -147,7 +147,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       parse_request!(record)
 
       time = Time.parse(record['timestamp'])
-      router.emit(@tag, time, record)
+      router.emit(@tag, time.to_i, record)
     end
   end
 

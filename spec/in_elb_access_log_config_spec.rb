@@ -9,6 +9,8 @@ describe 'Fluent::ElbAccessLogInput#configure' do
 
   before do
     Timecop.freeze(today)
+    allow(FileUtils).to receive(:touch)
+    allow(File).to receive(:read) { nil }
   end
 
   context 'when default' do

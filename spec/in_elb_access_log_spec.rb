@@ -29,6 +29,7 @@ describe Fluent::ElbAccessLogInput do
   before do
     Timecop.freeze(today)
     allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:client) { client }
+    allow(FileUtils).to receive(:touch)
   end
 
   after do
@@ -93,7 +94,7 @@ describe Fluent::ElbAccessLogInput do
 
     let(:expected_emits) do
       [["elb.access_log",
-        Time.parse('2015-05-24 19:55:36 UTC'),
+        Time.parse('2015-05-24 19:55:36 UTC').to_i,
         {"timestamp"=>"2015-05-24T19:55:36.000000Z",
          "elb"=>"hoge",
          "client_port"=>"14.14.124.20:57673",
@@ -121,7 +122,7 @@ describe Fluent::ElbAccessLogInput do
          "request.uri.query"=>nil,
          "request.uri.fragment"=>nil}],
        ["elb.access_log",
-        Time.parse('2015-05-24 19:55:36 UTC'),
+        Time.parse('2015-05-24 19:55:36 UTC').to_i,
         {"timestamp"=>"2015-05-24T19:55:36.000000Z",
          "elb"=>"hoge",
          "client_port"=>"14.14.124.20:57673",
@@ -149,7 +150,7 @@ describe Fluent::ElbAccessLogInput do
          "request.uri.query"=>nil,
          "request.uri.fragment"=>nil}],
        ["elb.access_log",
-        Time.parse('2015-05-25 19:55:36 UTC'),
+        Time.parse('2015-05-25 19:55:36 UTC').to_i,
         {"timestamp"=>"2015-05-25T19:55:36.000000Z",
          "elb"=>"hoge",
          "client_port"=>"14.14.124.20:57673",
@@ -177,7 +178,7 @@ describe Fluent::ElbAccessLogInput do
          "request.uri.query"=>nil,
          "request.uri.fragment"=>nil}],
        ["elb.access_log",
-        Time.parse('2015-05-25 19:55:36 UTC'),
+        Time.parse('2015-05-25 19:55:36 UTC').to_i,
         {"timestamp"=>"2015-05-25T19:55:36.000000Z",
          "elb"=>"hoge",
          "client_port"=>"14.14.124.20:57673",
@@ -245,7 +246,7 @@ describe Fluent::ElbAccessLogInput do
 
     let(:expected_emits) do
       [["any.tag",
-        Time.parse('2015-05-24 19:55:36 UTC'),
+        Time.parse('2015-05-24 19:55:36 UTC').to_i,
         {"timestamp"=>"2015-05-24T19:55:36.000000Z",
          "elb"=>"hoge",
          "client_port"=>"14.14.124.20:57673",
