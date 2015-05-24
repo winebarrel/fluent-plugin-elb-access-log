@@ -23,7 +23,7 @@ def create_driver(options = {})
   s3_bucket = options.fetch(:s3_bucket) || 'my-bucket'
   s3_region = options.fetch(:s3_region) || 'us-west-1'
 
-  additional_options = options.map {|key, value|
+  additional_options = options.select {|k, v| v }.map {|key, value|
     "#{key} #{value}"
   }.join("\n")
 
