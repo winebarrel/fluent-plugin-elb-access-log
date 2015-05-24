@@ -4,9 +4,9 @@ Gem::Specification.new do |spec|
   spec.version       = '0.1.0'
   spec.authors       = ['Genki Sugawara']
   spec.email         = ['sugawara@cookpad.com']
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
-  spec.homepage      = ''
+  spec.summary       = %q{Fluentd input plugin for AWS ELB Access Logs.}
+  spec.description   = %q{Fluentd input plugin for AWS ELB Access Logs.}
+  spec.homepage      = 'https://github.com/winebarrel/fluent-plugin-elb-access-log'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
