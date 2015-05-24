@@ -29,7 +29,6 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     define_method('router') { Fluent::Engine }
   end
 
-
   config_param :aws_key_id,       :string,  :default => nil
   config_param :aws_sec_key,      :string,  :default => nil
   config_param :profile,          :string,  :default => nil
@@ -50,6 +49,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     require 'fileutils'
     require 'logger'
     require 'time'
+    require 'uri'
     require 'aws-sdk'
   end
 
@@ -143,8 +143,25 @@ class Fluent::ElbAccessLogInput < Fluent::Input
         record[name] = record[name].send(conv) if conv
       end
 
+      parse_request!(record)
+
       time = Time.parse(record['timestamp'])
       router.emit(@tag, time, record)
+    end
+  end
+
+  def parse_request!(record)
+    request = record['request']
+    method, uri, http_version = request.split(' ', 3)
+
+    record['request.method'] = method
+    record['request.uri'] = uri
+    record['request.http_version'] = http_version
+
+    uri = URI.parse(uri)
+
+    [:scheme ,:userinfo, :host, :port, :registry, :path, :opaque, :query, :fragment].each do |key|
+      record["request.uri.#{key}"] = uri.send(key)
     end
   end
 
