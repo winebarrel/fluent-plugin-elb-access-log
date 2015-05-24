@@ -128,7 +128,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     base_prefix = "AWSLogs/#{@account_id}/elasticloadbalancing/#{@s3_region}/"
     base_prefix = "#{@s3_prefix}/#{base_prefix}" if @s3_prefix
 
-    [timestamp, timestamp + 86400].map do |date|
+    [timestamp - 86400, timestamp, timestamp + 86400].map do |date|
       base_prefix + date.strftime('%Y/%m/%d/')
     end
   end
