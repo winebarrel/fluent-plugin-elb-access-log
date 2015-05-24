@@ -1,7 +1,11 @@
 # coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'fluent_plugin_elb_access_log/version'
+
 Gem::Specification.new do |spec|
   spec.name          = 'fluent-plugin-elb-access-log'
-  spec.version       = '0.1.0'
+  spec.version       = FluentPluginElbAccessLog::VERSION
   spec.authors       = ['Genki Sugawara']
   spec.email         = ['sugawara@cookpad.com']
   spec.summary       = %q{Fluentd input plugin for AWS ELB Access Logs.}
