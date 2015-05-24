@@ -33,6 +33,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :aws_sec_key,      :string,  :default => nil
   config_param :profile,          :string,  :default => nil
   config_param :credentials_path, :string,  :default => nil
+  config_param :http_proxy,       :string,  :default => nil
   config_param :account_id,       :string
   config_param :s3_bucket,        :string
   config_param :s3_region,        :string
@@ -176,6 +177,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
     options = {:user_agent_suffix => USER_AGENT_SUFFIX}
     options[:region] = @region if @region
+    options[:http_proxy] = @http_proxy if @http_proxy
 
     if @aws_key_id and @aws_sec_key
       options[:access_key_id] = @aws_key_id

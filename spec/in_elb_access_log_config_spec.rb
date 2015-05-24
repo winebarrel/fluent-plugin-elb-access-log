@@ -26,6 +26,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.aws_sec_key).to be_nil
       expect(driver.instance.profile).to be_nil
       expect(driver.instance.credentials_path).to be_nil
+      expect(driver.instance.http_proxy).to be_nil
       expect(driver.instance.s3_bucket).to eq s3_bucket
       expect(driver.instance.s3_region).to eq s3_region
       expect(driver.instance.s3_prefix).to be_nil
@@ -42,6 +43,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     let(:aws_sec_key) { 'YOUR_SECRET_ACCESS_KEY' }
     let(:profile) { 'PROFILE_NAME' }
     let(:credentials_path) { 'path/to/credentials_file' }
+    let(:http_proxy) { 'http://example.net' }
     let(:s3_prefix) { 's3-prefix' }
     let(:tag) { 'any.tag' }
     let(:tsfile_path) { '/tmp/foo' }
@@ -54,6 +56,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         aws_sec_key: aws_sec_key,
         profile: profile,
         credentials_path: credentials_path,
+        http_proxy: http_proxy,
         account_id: account_id,
         s3_bucket: s3_bucket,
         s3_region: s3_region,
@@ -71,6 +74,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.aws_sec_key).to eq aws_sec_key
       expect(driver.instance.profile).to eq profile
       expect(driver.instance.credentials_path).to eq credentials_path
+      expect(driver.instance.http_proxy).to eq http_proxy
       expect(driver.instance.s3_bucket).to eq s3_bucket
       expect(driver.instance.s3_region).to eq s3_region
       expect(driver.instance.s3_prefix).to eq s3_prefix

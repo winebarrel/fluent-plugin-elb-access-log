@@ -30,6 +30,7 @@ Or install it yourself as:
   #aws_sec_key YOUR_SECRET_ACCESS_KEY
   #profile PROFILE_NAME
   #credentials_path path/to/credentials_file
+  #http_proxy http://...
 
   account_id 123456789012 # required
   s3_bucket BUCKET_NAME # required
