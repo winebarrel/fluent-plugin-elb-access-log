@@ -45,7 +45,7 @@ Or install it yourself as:
 // elb.access_log:
 {
   "timestamp":"2015-05-24T08:25:36.229576Z",
-  "elb":"foobarzoo",
+  "elb":"hoge",
   "client_port":"14.14.124.20:52232",
   "backend_port":"10.0.199.184:80",
   "request_processing_time":5.5e-05,
