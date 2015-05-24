@@ -2,7 +2,7 @@
 
 Fluentd input plugin for [AWS ELB Access Logs](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html).
 
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-elb-access-log.png)](http://badge.fury.io/rb/fluent-plugin-elb-access-log)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-elb-access-log.svg)](http://badge.fury.io/rb/fluent-plugin-elb-access-log)
 [![Build Status](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log.svg?branch=master)](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log)
 
 ## Installation
