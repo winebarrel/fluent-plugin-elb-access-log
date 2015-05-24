@@ -81,4 +81,3 @@ Or install it yourself as:
 * It is possible to change the record tag.
 * List objects with prefix.
 * Perse request line URI.
-* It has tests other than the configuration file.
