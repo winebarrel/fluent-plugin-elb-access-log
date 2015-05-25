@@ -144,11 +144,20 @@ class Fluent::ElbAccessLogInput < Fluent::Input
         record[name] = record[name].send(conv) if conv
       end
 
+      split_address_port!(record, 'client')
+      split_address_port!(record, 'backend')
+
       parse_request!(record)
 
       time = Time.parse(record['timestamp'])
       router.emit(@tag, time.to_i, record)
     end
+  end
+
+  def split_address_port!(record, prefix)
+    address, port = record["#{prefix}_port"].split(':', 2)
+    record[prefix] = address
+    record["#{prefix}_port"] = port.to_i
   end
 
   def parse_request!(record)

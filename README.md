@@ -50,8 +50,10 @@ Or install it yourself as:
 {
   "timestamp":"2015-05-24T08:25:36.229576Z",
   "elb":"hoge",
-  "client_port":"14.14.124.20:52232",
-  "backend_port":"10.0.199.184:80",
+  "client":"14.14.124.20",
+  "client_port":52232,
+  "backend":"10.0.199.184",
+  "backend_port":80,
   "request_processing_time":5.5e-05,
   "backend_processing_time":0.000893,
   "response_processing_time":5.7e-05,
