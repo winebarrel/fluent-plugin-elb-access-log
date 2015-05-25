@@ -21,7 +21,7 @@ def create_driver(options = {})
 
   account_id = options.fetch(:account_id) || '123456789012'
   s3_bucket = options.fetch(:s3_bucket) || 'my-bucket'
-  s3_region = options.fetch(:s3_region) || 'us-west-1'
+  region = options.fetch(:region) || 'us-west-1'
 
   additional_options = options.select {|k, v| v }.map {|key, value|
     "#{key} #{value}"
@@ -31,7 +31,7 @@ def create_driver(options = {})
 type elb_access_log
 account_id #{account_id}
 s3_bucket #{s3_bucket}
-s3_region #{s3_region}
+region #{region}
 #{additional_options}
   EOS
 
