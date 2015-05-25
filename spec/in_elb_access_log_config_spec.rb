@@ -1,7 +1,7 @@
 describe 'Fluent::ElbAccessLogInput#configure' do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
-  let(:s3_region) { 'us-west-1' }
+  let(:region) { 'us-west-1' }
   let(:driver) { create_driver(fluentd_conf) }
   let(:today) { Time.parse('2015/05/24 18:30 UTC') }
 
@@ -18,7 +18,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       {
         account_id: account_id,
         s3_bucket: s3_bucket,
-        s3_region: s3_region,
+        region: region,
         interval: nil,
       }
     end
@@ -30,7 +30,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.credentials_path).to be_nil
       expect(driver.instance.http_proxy).to be_nil
       expect(driver.instance.s3_bucket).to eq s3_bucket
-      expect(driver.instance.s3_region).to eq s3_region
+      expect(driver.instance.region).to eq region
       expect(driver.instance.s3_prefix).to be_nil
       expect(driver.instance.tag).to eq 'elb.access_log'
       expect(driver.instance.tsfile_path).to eq '/var/tmp/fluent-plugin-elb-access-log.ts'
@@ -61,7 +61,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         http_proxy: http_proxy,
         account_id: account_id,
         s3_bucket: s3_bucket,
-        s3_region: s3_region,
+        region: region,
         s3_prefix: s3_prefix,
         tag: tag,
         tsfile_path: tsfile_path,
@@ -78,7 +78,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.credentials_path).to eq credentials_path
       expect(driver.instance.http_proxy).to eq http_proxy
       expect(driver.instance.s3_bucket).to eq s3_bucket
-      expect(driver.instance.s3_region).to eq s3_region
+      expect(driver.instance.region).to eq region
       expect(driver.instance.s3_prefix).to eq s3_prefix
       expect(driver.instance.tag).to eq tag
       expect(driver.instance.tsfile_path).to eq tsfile_path

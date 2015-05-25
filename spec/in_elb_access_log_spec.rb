@@ -1,7 +1,7 @@
 describe Fluent::ElbAccessLogInput do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
-  let(:s3_region) { 'us-west-1' }
+  let(:region) { 'us-west-1' }
   let(:driver) { create_driver(fluentd_conf) }
   let(:client){ Aws::S3::Client.new(stub_responses: true) }
 
@@ -9,7 +9,7 @@ describe Fluent::ElbAccessLogInput do
     {
       account_id: account_id,
       s3_bucket: s3_bucket,
-      s3_region: s3_region,
+      region: region,
       start_datetime: (today - 1).to_s,
     }
   end
@@ -18,9 +18,9 @@ describe Fluent::ElbAccessLogInput do
   let(:yesterday) { today - 86400 }
   let(:tomorrow) { today + 86400 }
 
-  let(:today_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{s3_region}/#{today.strftime('%Y/%m/%d')}/" }
-  let(:yesterday_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{s3_region}/#{yesterday.strftime('%Y/%m/%d')}/" }
-  let(:tomorrow_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{s3_region}/#{tomorrow.strftime('%Y/%m/%d')}/" }
+  let(:today_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{region}/#{today.strftime('%Y/%m/%d')}/" }
+  let(:yesterday_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{region}/#{yesterday.strftime('%Y/%m/%d')}/" }
+  let(:tomorrow_prefix) { "AWSLogs/#{account_id}/elasticloadbalancing/#{region}/#{tomorrow.strftime('%Y/%m/%d')}/" }
 
   let(:today_object_key) { "#{today_prefix}#{account_id}_elasticloadbalancing_ap-northeast-1_hoge_#{today.iso8601}_52.68.51.1_8hSqR3o4.log" }
   let(:yesterday_object_key) { "#{yesterday_prefix}#{account_id}_elasticloadbalancing_ap-northeast-1_hoge_#{yesterday.iso8601}_52.68.51.1_8hSqR3o4.log" }
@@ -221,7 +221,7 @@ describe Fluent::ElbAccessLogInput do
     {
       account_id: account_id,
       s3_bucket: s3_bucket,
-      s3_region: s3_region,
+      region: region,
       start_datetime: (today - 1).to_s,
       tag: 'any.tag'
     }

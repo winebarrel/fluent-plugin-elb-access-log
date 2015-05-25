@@ -35,8 +35,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :credentials_path, :string,  :default => nil
   config_param :http_proxy,       :string,  :default => nil
   config_param :account_id,       :string
+  config_param :region,           :string
   config_param :s3_bucket,        :string
-  config_param :s3_region,        :string
   config_param :s3_prefix,        :string,  :default => nil
   config_param :tag,              :string,  :default => 'elb.access_log'
   config_param :tsfile_path,      :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
@@ -126,7 +126,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   end
 
   def prefixes(timestamp)
-    base_prefix = "AWSLogs/#{@account_id}/elasticloadbalancing/#{@s3_region}/"
+    base_prefix = "AWSLogs/#{@account_id}/elasticloadbalancing/#{@region}/"
     base_prefix = "#{@s3_prefix}/#{base_prefix}" if @s3_prefix
 
     [timestamp - 86400, timestamp, timestamp + 86400].map do |date|

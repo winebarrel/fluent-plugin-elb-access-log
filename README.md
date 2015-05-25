@@ -33,8 +33,8 @@ Or install it yourself as:
   #http_proxy http://...
 
   account_id 123456789012 # required
+  region us-west-1 # required
   s3_bucket BUCKET_NAME # required
-  s3_region us-west-1 # required
   #s3_prefix PREFIX
 
   #tag elb.access_log
