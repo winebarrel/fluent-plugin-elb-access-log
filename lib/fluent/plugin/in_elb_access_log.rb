@@ -88,7 +88,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       end
 
       if @history.length > @history_length
-        @history.shift(history.length - @history_length)
+        @history.shift(@history.length - @history_length)
       end
     end
 

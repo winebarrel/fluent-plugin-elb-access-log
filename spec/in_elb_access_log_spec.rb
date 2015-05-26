@@ -402,4 +402,48 @@ describe Fluent::ElbAccessLogInput do
 
     it { is_expected.to be_empty }
   end
+
+  describe 'history#length' do
+    let(:today_access_log) do
+      <<-EOS
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+      EOS
+    end
+
+    let(:history) { driver.instance.instance_variable_get(:@history) }
+
+    before do
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+        [double('today_objects', contents: [double('today_object', key: today_object_key)])]
+      end
+
+      expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
+        [double('today_s3_object', body: StringIO.new(today_access_log))]
+      end
+
+      expect(driver.instance).to receive(:save_timestamp).with(today)
+    end
+
+    subject { history.length }
+
+    context 'when history.length <= 100' do
+      before do
+        driver.run
+      end
+
+      it { is_expected.to eq 1 }
+    end
+
+    context 'when history.length > 100' do
+      before do
+        history.concat (1..100).map(&:to_s)
+        driver.run
+      end
+
+      it { is_expected.to eq 100 }
+    end
+  end
 end
