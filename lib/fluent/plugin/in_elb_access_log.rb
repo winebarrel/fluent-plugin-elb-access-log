@@ -155,9 +155,17 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       access_log = sampling(access_log)
     end
 
-    access_log = CSV.parse(access_log, :col_sep => ' ')
+    parsed_access_log = []
 
-    access_log.each do |row|
+    access_log.split("\n").each do |line|
+      begin
+        parsed_access_log << CSV.parse_line(line, :col_sep => ' ')
+      rescue => e
+        @log.warn(e.message)
+      end
+    end
+
+    parsed_access_log.each do |row|
       record = Hash[ACCESS_LOG_FIELDS.keys.zip(row)]
 
       ACCESS_LOG_FIELDS.each do |name, conv|
