@@ -161,7 +161,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       begin
         parsed_access_log << CSV.parse_line(line, :col_sep => ' ')
       rescue => e
-        @log.warn(e.message)
+        @log.warn("#{e.message}: #{line}")
       end
     end
 
@@ -207,7 +207,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
         record["request.uri.#{key}"] = uri.send(key)
       end
     rescue => e
-      @log.warn(e.message)
+      @log.warn("#{e.message}: #{uri}")
     end
   end
 
