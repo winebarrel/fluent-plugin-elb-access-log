@@ -29,6 +29,7 @@ describe Fluent::ElbAccessLogInput do
   before do
     Timecop.freeze(today)
     allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:client) { client }
+    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
     allow(FileUtils).to receive(:touch)
   end
 
@@ -44,6 +45,7 @@ describe Fluent::ElbAccessLogInput do
       expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) { [] }
       expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
       expect(driver.instance).to_not receive(:save_timestamp).with(today)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -88,6 +90,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(tomorrow)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -391,6 +394,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -453,6 +457,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(driver.instance).to_not receive(:save_timestamp)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -512,6 +517,7 @@ describe Fluent::ElbAccessLogInput do
 
       expect(client).to_not receive(:get_object)
       expect(driver.instance).to_not receive(:save_timestamp)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -539,6 +545,7 @@ describe Fluent::ElbAccessLogInput do
       history = driver.instance.instance_variable_get(:@history)
       history << today_object_key
       expect(driver.instance).to_not receive(:save_timestamp)
+      expect(driver.instance).to receive(:save_history)
 
       driver.run
     end
@@ -568,6 +575,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
+      expect(driver.instance).to receive(:save_history)
     end
 
     subject { history.length }

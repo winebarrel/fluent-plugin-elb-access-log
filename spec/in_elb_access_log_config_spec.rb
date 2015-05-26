@@ -11,6 +11,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     Timecop.freeze(today)
     allow(FileUtils).to receive(:touch)
     allow(File).to receive(:read) { nil }
+    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
   end
 
   context 'when default' do
@@ -34,6 +35,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.s3_prefix).to be_nil
       expect(driver.instance.tag).to eq 'elb.access_log'
       expect(driver.instance.tsfile_path).to eq '/var/tmp/fluent-plugin-elb-access-log.ts'
+      expect(driver.instance.histfile_path).to eq '/var/tmp/fluent-plugin-elb-access-log.history'
       expect(driver.instance.interval).to eq 300
       expect(driver.instance.start_datetime).to eq today
       expect(driver.instance.buffer_sec).to eq 600
@@ -52,6 +54,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     let(:s3_prefix) { 's3-prefix' }
     let(:tag) { 'any.tag' }
     let(:tsfile_path) { '/tmp/foo' }
+    let(:histfile_path) { '/tmp/bar' }
     let(:interval) { 500 }
     let(:start_datetime) { today - 3600 }
     let(:buffer_sec) { 1200 }
@@ -71,6 +74,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         s3_prefix: s3_prefix,
         tag: tag,
         tsfile_path: tsfile_path,
+        histfile_path: histfile_path,
         interval: interval,
         start_datetime: start_datetime,
         buffer_sec: buffer_sec,
@@ -91,6 +95,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.s3_prefix).to eq s3_prefix
       expect(driver.instance.tag).to eq tag
       expect(driver.instance.tsfile_path).to eq tsfile_path
+      expect(driver.instance.histfile_path).to eq histfile_path
       expect(driver.instance.interval).to eq interval
       expect(driver.instance.start_datetime).to eq start_datetime
       expect(driver.instance.buffer_sec).to eq buffer_sec

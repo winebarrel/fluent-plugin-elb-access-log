@@ -39,6 +39,7 @@ Or install it yourself as:
 
   #tag elb.access_log
   #tsfile_path /var/tmp/fluent-plugin-elb-access-log.ts
+  #histfile_path /var/tmp/fluent-plugin-elb-access-log.history
   #interval 300
   #start_datetime 2015/05/24 17:00
   #buffer_sec 600

@@ -40,6 +40,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :s3_prefix,         :string,  :default => nil
   config_param :tag,               :string,  :default => 'elb.access_log'
   config_param :tsfile_path,       :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
+  config_param :histfile_path,     :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.history'
   config_param :interval,          :time,    :default => 300
   config_param :start_datetime,    :string,  :default => nil
   config_param :buffer_sec,        :time,    :default => 600
@@ -61,6 +62,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     super
 
     FileUtils.touch(@tsfile_path)
+    FileUtils.touch(@histfile_path)
 
     if @start_datetime
       @start_datetime = Time.parse(@start_datetime).utc
@@ -68,7 +70,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       @start_datetime = Time.parse(File.read(@tsfile_path)).utc rescue Time.now.utc
     end
 
-    @history = []
+    @history = load_history
   end
 
   def start
@@ -91,6 +93,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       if @history.length > @history_length
         @history.shift(@history.length - @history_length)
       end
+
+      save_history
     end
 
     @loop.attach(timer)
@@ -202,6 +206,16 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def save_timestamp(timestamp)
     open(@tsfile_path, 'w') do |tsfile|
       tsfile << timestamp.to_s
+    end
+  end
+
+  def load_history
+    File.read(@histfile_path).split("\n")
+  end
+
+  def save_history
+    open(@histfile_path, 'w') do |histfile|
+      histfile << @history.join("\n")
     end
   end
 
