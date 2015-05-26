@@ -179,10 +179,14 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     record['request.uri'] = uri
     record['request.http_version'] = http_version
 
-    uri = URI.parse(uri)
+    begin
+      uri = URI.parse(uri)
 
-    [:scheme ,:userinfo, :host, :port, :registry, :path, :opaque, :query, :fragment].each do |key|
-      record["request.uri.#{key}"] = uri.send(key)
+      [:scheme ,:userinfo, :host, :port, :registry, :path, :opaque, :query, :fragment].each do |key|
+        record["request.uri.#{key}"] = uri.send(key)
+      end
+    rescue => e
+      @log.warn(e.message)
     end
   end
 

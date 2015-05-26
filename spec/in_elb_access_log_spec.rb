@@ -216,6 +216,131 @@ describe Fluent::ElbAccessLogInput do
     end
 
     it { is_expected.to eq expected_emits }
+
+    context 'when include bad URI' do
+      let(:today_access_log) do
+        <<-EOS
+  2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+  2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://'hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+        EOS
+      end
+
+      let(:expected_emits) do
+        [["elb.access_log",
+          Time.parse('2015-05-24 19:55:36 UTC').to_i,
+          {"timestamp"=>"2015-05-24T19:55:36.000000Z",
+           "elb"=>"hoge",
+           "client"=>"14.14.124.20",
+           "client_port"=>57673,
+           "backend"=>"10.0.199.184",
+           "backend_port"=>80,
+           "request_processing_time"=>5.3e-05,
+           "backend_processing_time"=>0.000913,
+           "response_processing_time"=>3.6e-05,
+           "elb_status_code"=>200,
+           "backend_status_code"=>200,
+           "received_bytes"=>0,
+           "sent_bytes"=>3,
+           "request"=>
+            "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+           "request.method"=>"GET",
+           "request.uri"=>
+            "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+           "request.http_version"=>"HTTP/1.1",
+           "request.uri.scheme"=>"http",
+           "request.uri.userinfo"=>nil,
+           "request.uri.host"=>"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+           "request.uri.port"=>80,
+           "request.uri.registry"=>nil,
+           "request.uri.path"=>"/",
+           "request.uri.opaque"=>nil,
+           "request.uri.query"=>nil,
+           "request.uri.fragment"=>nil}],
+         ["elb.access_log",
+          Time.parse('2015-05-24 19:55:36 UTC').to_i,
+          {"timestamp"=>"2015-05-24T19:55:36.000000Z",
+           "elb"=>"hoge",
+           "client"=>"14.14.124.20",
+           "client_port"=>57673,
+           "backend"=>"10.0.199.184",
+           "backend_port"=>80,
+           "request_processing_time"=>5.3e-05,
+           "backend_processing_time"=>0.000913,
+           "response_processing_time"=>3.6e-05,
+           "elb_status_code"=>200,
+           "backend_status_code"=>200,
+           "received_bytes"=>0,
+           "sent_bytes"=>3,
+           "request"=>
+            "GET http://'hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+           "request.method"=>"GET",
+           "request.uri"=>
+            "http://'hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+           "request.http_version"=>"HTTP/1.1"}],
+         ["elb.access_log",
+          Time.parse('2015-05-25 19:55:36 UTC').to_i,
+          {"timestamp"=>"2015-05-25T19:55:36.000000Z",
+           "elb"=>"hoge",
+           "client"=>"14.14.124.20",
+           "client_port"=>57673,
+           "backend"=>"10.0.199.184",
+           "backend_port"=>80,
+           "request_processing_time"=>5.3e-05,
+           "backend_processing_time"=>0.000913,
+           "response_processing_time"=>3.6e-05,
+           "elb_status_code"=>200,
+           "backend_status_code"=>200,
+           "received_bytes"=>0,
+           "sent_bytes"=>3,
+           "request"=>
+            "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+           "request.method"=>"GET",
+           "request.uri"=>
+            "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+           "request.http_version"=>"HTTP/1.1",
+           "request.uri.scheme"=>"http",
+           "request.uri.userinfo"=>nil,
+           "request.uri.host"=>"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+           "request.uri.port"=>80,
+           "request.uri.registry"=>nil,
+           "request.uri.path"=>"/",
+           "request.uri.opaque"=>nil,
+           "request.uri.query"=>nil,
+           "request.uri.fragment"=>nil}],
+         ["elb.access_log",
+          Time.parse('2015-05-25 19:55:36 UTC').to_i,
+          {"timestamp"=>"2015-05-25T19:55:36.000000Z",
+           "elb"=>"hoge",
+           "client"=>"14.14.124.20",
+           "client_port"=>57673,
+           "backend"=>"10.0.199.184",
+           "backend_port"=>80,
+           "request_processing_time"=>5.3e-05,
+           "backend_processing_time"=>0.000913,
+           "response_processing_time"=>3.6e-05,
+           "elb_status_code"=>200,
+           "backend_status_code"=>200,
+           "received_bytes"=>0,
+           "sent_bytes"=>3,
+           "request"=>
+            "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+           "request.method"=>"GET",
+           "request.uri"=>
+            "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+           "request.http_version"=>"HTTP/1.1",
+           "request.uri.scheme"=>"http",
+           "request.uri.userinfo"=>nil,
+           "request.uri.host"=>"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+           "request.uri.port"=>80,
+           "request.uri.registry"=>nil,
+           "request.uri.path"=>"/",
+           "request.uri.opaque"=>nil,
+           "request.uri.query"=>nil,
+           "request.uri.fragment"=>nil}]]
+      end
+
+      it {  is_expected.to eq expected_emits }
+    end
   end
 
   context 'when access log exists (with tag option)' do
