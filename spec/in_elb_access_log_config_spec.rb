@@ -36,6 +36,8 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.tsfile_path).to eq '/var/tmp/fluent-plugin-elb-access-log.ts'
       expect(driver.instance.interval).to eq 300
       expect(driver.instance.start_datetime).to eq today
+      expect(driver.instance.buffer_sec).to eq 600
+      expect(driver.instance.history_length).to eq 100
       expect(driver.instance.debug).to be_falsey
     end
   end
@@ -51,6 +53,8 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     let(:tsfile_path) { '/tmp/foo' }
     let(:interval) { 500 }
     let(:start_datetime) { today - 3600 }
+    let(:buffer_sec) { 1200 }
+    let(:history_length) { 200 }
 
     let(:fluentd_conf) do
       {
@@ -67,6 +71,8 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         tsfile_path: tsfile_path,
         interval: interval,
         start_datetime: start_datetime,
+        buffer_sec: buffer_sec,
+        history_length: history_length,
         debug: true,
       }
     end
@@ -84,6 +90,8 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.tsfile_path).to eq tsfile_path
       expect(driver.instance.interval).to eq interval
       expect(driver.instance.start_datetime).to eq start_datetime
+      expect(driver.instance.buffer_sec).to eq buffer_sec
+      expect(driver.instance.history_length).to eq history_length
       expect(driver.instance.debug).to be_truthy
     end
   end

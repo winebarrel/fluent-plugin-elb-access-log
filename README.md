@@ -41,6 +41,8 @@ Or install it yourself as:
   #tsfile_path /var/tmp/fluent-plugin-elb-access-log.ts
   #interval 300
   #start_datetime 2015/05/24 17:00
+  #buffer_sec 600
+  #history_length 100
   #debug false
 </source>
 ```

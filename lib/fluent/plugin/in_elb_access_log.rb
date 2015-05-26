@@ -42,6 +42,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :tsfile_path,      :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
   config_param :interval,         :time,    :default => 300
   config_param :start_datetime,   :string,  :default => nil
+  config_param :buffer_sec,       :time,    :default => 600
+  config_param :history_length,   :integer, :default => 100
   config_param :debug,            :bool,    :default => false
 
   def initialize
@@ -64,6 +66,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     else
       @start_datetime = Time.parse(File.read(@tsfile_path)).utc rescue Time.now.utc
     end
+
+    @history = []
   end
 
   def start
@@ -78,9 +82,13 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     timer = TimerWatcher.new(@interval, true, log) do
       new_timestamp = fetch(timestamp)
 
-      if timestamp != new_timestamp
+      if new_timestamp > timestamp
         save_timestamp(new_timestamp)
         timestamp = new_timestamp
+      end
+
+      if @history.length > @history_length
+        @history.shift(history.length - @history_length)
       end
     end
 
@@ -111,13 +119,16 @@ class Fluent::ElbAccessLogInput < Fluent::Input
           account_id, logfile_const, region, elb_name, logfile_datetime, ip, logfile_suffix = obj.key.split('_', 7)
           logfile_datetime = Time.parse(logfile_datetime)
 
-          if logfile_suffix !~ /\.log\z/ or logfile_datetime <= timestamp
+          if logfile_suffix !~ /\.log\z/ or logfile_datetime <= (timestamp - @buffer_sec)
             next
           end
 
-          access_log = client.get_object(bucket: @s3_bucket, key: obj.key).first.body.string
-          emit_access_log(access_log)
-          last_timestamp = logfile_datetime
+          unless @history.include?(obj.key)
+            access_log = client.get_object(bucket: @s3_bucket, key: obj.key).first.body.string
+            emit_access_log(access_log)
+            last_timestamp = logfile_datetime
+            @history.push(obj.key)
+          end
         end
       end
     end
