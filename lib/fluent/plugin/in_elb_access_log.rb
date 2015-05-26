@@ -54,7 +54,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     require 'fileutils'
     require 'logger'
     require 'time'
-    require 'uri'
+    require 'addressable/uri'
     require 'aws-sdk'
   end
 
@@ -193,9 +193,9 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     record['request.http_version'] = http_version
 
     begin
-      uri = URI.parse(uri)
+      uri = Addressable::URI.parse(uri)
 
-      [:scheme ,:userinfo, :host, :port, :registry, :path, :opaque, :query, :fragment].each do |key|
+      [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
         record["request.uri.#{key}"] = uri.send(key)
       end
     rescue => e

@@ -70,12 +70,10 @@ Or install it yourself as:
   "request.uri":"http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
   "request.http_version":"HTTP/1.1",
   "request.uri.scheme":"http",
-  "request.uri.userinfo":null,
+  "request.uri.user":null,
   "request.uri.host":"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
   "request.uri.port":80,
-  "request.uri.registry":null,
   "request.uri.path":"/",
-  "request.uri.opaque":null,
   "request.uri.query":null,
   "request.uri.fragment":null
 }
