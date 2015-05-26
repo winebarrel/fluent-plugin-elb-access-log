@@ -217,6 +217,24 @@ describe Fluent::ElbAccessLogInput do
 
     it { is_expected.to eq expected_emits }
 
+    context 'when sampling' do
+      let(:fluentd_conf) do
+        {
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          sampling_interval: 2,
+        }
+      end
+
+      it do
+        expected_emits.delete_at(3)
+        expected_emits.delete_at(1)
+        is_expected.to eq expected_emits
+      end
+    end
+
     context 'when include bad URI' do
       let(:today_access_log) do
         <<-EOS

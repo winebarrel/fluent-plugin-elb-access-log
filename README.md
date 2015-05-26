@@ -43,6 +43,7 @@ Or install it yourself as:
   #start_datetime 2015/05/24 17:00
   #buffer_sec 600
   #history_length 100
+  #sampling_interval 1
   #debug false
 </source>
 ```

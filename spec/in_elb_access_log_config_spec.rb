@@ -38,6 +38,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.start_datetime).to eq today
       expect(driver.instance.buffer_sec).to eq 600
       expect(driver.instance.history_length).to eq 100
+      expect(driver.instance.sampling_interval).to eq 1
       expect(driver.instance.debug).to be_falsey
     end
   end
@@ -55,6 +56,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     let(:start_datetime) { today - 3600 }
     let(:buffer_sec) { 1200 }
     let(:history_length) { 200 }
+    let(:sampling_interval) { 100 }
 
     let(:fluentd_conf) do
       {
@@ -73,6 +75,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         start_datetime: start_datetime,
         buffer_sec: buffer_sec,
         history_length: history_length,
+        sampling_interval: sampling_interval,
         debug: true,
       }
     end
@@ -92,6 +95,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.start_datetime).to eq start_datetime
       expect(driver.instance.buffer_sec).to eq buffer_sec
       expect(driver.instance.history_length).to eq history_length
+      expect(driver.instance.sampling_interval).to eq sampling_interval
       expect(driver.instance.debug).to be_truthy
     end
   end

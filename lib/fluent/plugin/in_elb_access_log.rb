@@ -29,22 +29,23 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     define_method('router') { Fluent::Engine }
   end
 
-  config_param :aws_key_id,       :string,  :default => nil
-  config_param :aws_sec_key,      :string,  :default => nil
-  config_param :profile,          :string,  :default => nil
-  config_param :credentials_path, :string,  :default => nil
-  config_param :http_proxy,       :string,  :default => nil
-  config_param :account_id,       :string
-  config_param :region,           :string
-  config_param :s3_bucket,        :string
-  config_param :s3_prefix,        :string,  :default => nil
-  config_param :tag,              :string,  :default => 'elb.access_log'
-  config_param :tsfile_path,      :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
-  config_param :interval,         :time,    :default => 300
-  config_param :start_datetime,   :string,  :default => nil
-  config_param :buffer_sec,       :time,    :default => 600
-  config_param :history_length,   :integer, :default => 100
-  config_param :debug,            :bool,    :default => false
+  config_param :aws_key_id,        :string,  :default => nil
+  config_param :aws_sec_key,       :string,  :default => nil
+  config_param :profile,           :string,  :default => nil
+  config_param :credentials_path,  :string,  :default => nil
+  config_param :http_proxy,        :string,  :default => nil
+  config_param :account_id,        :string
+  config_param :region,            :string
+  config_param :s3_bucket,         :string
+  config_param :s3_prefix,         :string,  :default => nil
+  config_param :tag,               :string,  :default => 'elb.access_log'
+  config_param :tsfile_path,       :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
+  config_param :interval,          :time,    :default => 300
+  config_param :start_datetime,    :string,  :default => nil
+  config_param :buffer_sec,        :time,    :default => 600
+  config_param :history_length,    :integer, :default => 100
+  config_param :sampling_interval, :integer, :default => 1
+  config_param :debug,             :bool,    :default => false
 
   def initialize
     super
@@ -146,6 +147,10 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   end
 
   def emit_access_log(access_log)
+    if @sampling_interval > 1
+      access_log = sampling(access_log)
+    end
+
     access_log = CSV.parse(access_log, :col_sep => ' ')
 
     access_log.each do |row|
@@ -163,6 +168,10 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       time = Time.parse(record['timestamp'])
       router.emit(@tag, time.to_i, record)
     end
+  end
+
+  def sampling(access_log)
+    access_log.split("\n").each_with_index.select {|row, i| (i % @sampling_interval).zero? }.map {|row, i| row }.join("\n")
   end
 
   def split_address_port!(record, prefix)
