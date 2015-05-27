@@ -158,11 +158,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     parsed_access_log = []
 
     access_log.split("\n").each do |line|
-      begin
-        parsed_access_log << CSV.parse_line(line, :col_sep => ' ')
-      rescue => e
-        @log.warn("#{e.message}: #{line}")
-      end
+      line = parse_line(line)
+      parsed_access_log << line if line
     end
 
     parsed_access_log.each do |row|
@@ -180,6 +177,26 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       time = Time.parse(record['timestamp'])
       router.emit(@tag, time.to_i, record)
     end
+  end
+
+  def parse_line(line)
+    parsed = nil
+
+    begin
+      parsed = CSV.parse_line(line, :col_sep => ' ')
+    rescue => e
+      begin
+        parsed = line.split(' ', 12)
+
+        # request
+        parsed[11] ||= ''
+        parsed[11].gsub!(/\A"/, '').gsub!(/"\z/, '')
+      rescue => e2
+        @log.warn("#{e.message}: #{line}")
+      end
+    end
+
+    parsed
   end
 
   def sampling(access_log)
