@@ -190,7 +190,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
         # request
         parsed[11] ||= ''
-        parsed[11].gsub!(/\A"/, '').gsub!(/"\z/, '')
+        parsed[11].gsub!(/\A"/, '')
+        parsed[11].gsub!(/".*\z/, '')
       rescue => e2
         @log.warn("#{e.message}: #{line}")
       end
