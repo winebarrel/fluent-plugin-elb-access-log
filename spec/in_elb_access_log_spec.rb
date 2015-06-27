@@ -113,6 +113,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -141,6 +144,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -169,6 +175,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -197,6 +206,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -276,6 +288,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -338,6 +353,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -399,6 +417,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -460,6 +481,9 @@ describe Fluent::ElbAccessLogInput do
          "sent_bytes"=>3,
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"-",
+         "ssl_protocol"=>"-",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",

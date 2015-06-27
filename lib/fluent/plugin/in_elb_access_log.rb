@@ -19,6 +19,9 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     'received_bytes'           => :to_i,
     'sent_bytes'               => :to_i,
     'request'                  => nil,
+    'user_agent'               => nil,
+    'ssl_cipher'               => nil,
+    'ssl_protocol'             => nil,
   }
 
   unless method_defined?(:log)
@@ -190,8 +193,14 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
         # request
         parsed[11] ||= ''
-        parsed[11].gsub!(/\A"/, '')
-        parsed[11].gsub!(/".*\z/, '')
+        parsed[11].sub!(/\A"/, '')
+        parsed[11].sub!(/"(.*)\z/, '')
+
+        user_agent, ssl_cipher, ssl_protocol = $1.strip.split(' ', 3)
+        user_agent.sub!(/\A"/, '').sub!(/"\z/, '') if user_agent
+        parsed[12] = user_agent
+        parsed[13] = ssl_cipher
+        parsed[14] = ssl_protocol
       rescue => e2
         @log.warn("#{e.message}: #{line}")
       end
