@@ -30,6 +30,7 @@ describe Fluent::ElbAccessLogInput do
     Timecop.freeze(today)
     allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:client) { client }
     allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
     allow(FileUtils).to receive(:touch)
   end
 
@@ -56,15 +57,15 @@ describe Fluent::ElbAccessLogInput do
   context 'when access log exists' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
     let(:tomorrow_access_log) do
       <<-EOS
-2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
-2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
+2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -114,8 +115,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -145,8 +146,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -176,8 +177,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -207,8 +208,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -246,7 +247,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when include bad URI' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -289,8 +290,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -303,7 +304,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when access log exists (with tag option)' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -354,8 +355,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -375,7 +376,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when access old log exists' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -418,8 +419,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -439,7 +440,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when parse error' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -482,8 +483,8 @@ describe Fluent::ElbAccessLogInput do
          "request"=>
           "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
          "user_agent"=>"curl/7.30.0",
-         "ssl_cipher"=>"-",
-         "ssl_protocol"=>"-",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
          "request.method"=>"GET",
          "request.uri"=>
           "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
@@ -503,7 +504,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when access old log exists (timeout)' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -530,7 +531,7 @@ describe Fluent::ElbAccessLogInput do
   context 'when emitted log exists' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 
@@ -558,7 +559,7 @@ describe Fluent::ElbAccessLogInput do
   describe 'history#length' do
     let(:today_access_log) do
       <<-EOS
-2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" - -
+2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol
       EOS
     end
 

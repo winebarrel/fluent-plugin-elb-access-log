@@ -66,11 +66,16 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
     FileUtils.touch(@tsfile_path)
     FileUtils.touch(@histfile_path)
+    tsfile_start_datetime = parse_tsfile
 
-    if @start_datetime
+    if @start_datetime and not tsfile_start_datetime
       @start_datetime = Time.parse(@start_datetime).utc
     else
-      @start_datetime = Time.parse(File.read(@tsfile_path)).utc rescue Time.now.utc
+      if @start_datetime
+        log.warn("start_datetime(#{@start_datetime}) is set. but tsfile datetime(#{tsfile_start_datetime}) is used")
+      end
+
+      @start_datetime = tsfile_start_datetime || Time.now.utc
     end
 
     @history = load_history
@@ -254,6 +259,12 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     open(@histfile_path, 'w') do |histfile|
       histfile << @history.join("\n")
     end
+  end
+
+  def parse_tsfile
+    Time.parse(File.read(@tsfile_path)).utc
+  rescue
+    nil
   end
 
   def client

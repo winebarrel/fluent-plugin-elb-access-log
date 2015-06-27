@@ -12,6 +12,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     allow(FileUtils).to receive(:touch)
     allow(File).to receive(:read) { nil }
     allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
   end
 
   context 'when default' do
@@ -102,6 +103,67 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.history_length).to eq history_length
       expect(driver.instance.sampling_interval).to eq sampling_interval
       expect(driver.instance.debug).to be_truthy
+    end
+  end
+
+  context 'when start_datetime is set' do
+    let(:start_datetime) { '2015-01-01 01:02:03 UTC' }
+
+    let(:fluentd_conf) do
+      {
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: start_datetime
+      }
+    end
+
+    it do
+      expect(driver.instance.start_datetime).to eq Time.parse(start_datetime)
+    end
+  end
+
+  context 'when tsfile datetime is set' do
+    let(:tsfile_datetime) { '2015-02-01 01:02:03 UTC' }
+
+    let(:fluentd_conf) do
+      {
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: tsfile_datetime
+      }
+    end
+
+    before do
+      allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
+    end
+
+    it do
+      expect(driver.instance.start_datetime).to eq Time.parse(tsfile_datetime)
+    end
+  end
+
+  context 'when start_datetime and tsfile datetime are set' do
+    let(:start_datetime) { '2015-01-01 01:02:03 UTC' }
+    let(:tsfile_datetime) { '2015-02-01 01:02:03 UTC' }
+
+    let(:fluentd_conf) do
+      {
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: start_datetime
+      }
+    end
+
+    before do
+      allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
+      allow_any_instance_of(Fluent::Test::TestLogger).to receive(:warn).with("start_datetime(#{start_datetime}) is set. but tsfile datetime(#{tsfile_datetime}) is used")
+    end
+
+    it do
+      expect(driver.instance.start_datetime).to eq Time.parse(tsfile_datetime)
     end
   end
 end
