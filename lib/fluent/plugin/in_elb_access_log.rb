@@ -129,7 +129,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
           end
 
           unless @history.include?(obj.key)
-            access_log = client.get_object(bucket: @s3_bucket, key: obj.key).first.body.string
+            access_log = client.get_object(bucket: @s3_bucket, key: obj.key).body.string
             emit_access_log(access_log)
             last_timestamp = logfile_datetime
             @history.push(obj.key)

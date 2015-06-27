@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'fluentd'
-  spec.add_dependency 'aws-sdk', '~> 2', '< 2.1'
+  spec.add_dependency 'aws-sdk', '~> 2.1.2'
   spec.add_dependency 'addressable'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'

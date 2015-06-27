@@ -82,11 +82,11 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: tomorrow_object_key) do
-        [double('tomorrow_s3_object', body: StringIO.new(tomorrow_access_log))]
+        double('tomorrow_s3_object', body: StringIO.new(tomorrow_access_log))
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(tomorrow)
@@ -247,7 +247,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
@@ -311,7 +311,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
@@ -372,7 +372,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(driver.instance).to_not receive(:save_timestamp)
@@ -431,7 +431,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
@@ -549,7 +549,7 @@ describe Fluent::ElbAccessLogInput do
       end
 
       expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
-        [double('today_s3_object', body: StringIO.new(today_access_log))]
+        double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
