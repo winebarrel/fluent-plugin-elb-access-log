@@ -221,7 +221,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def split_address_port!(record, prefix)
     address_port = record["#{prefix}_port"]
     return unless address_port
-    address, port = record["#{prefix}_port"].split(':', 2)
+    address, port = address_port.split(':', 2)
     record[prefix] = address
     record["#{prefix}_port"] = port.to_i
   end
