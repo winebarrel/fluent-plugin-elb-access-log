@@ -182,7 +182,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
       parse_request!(record)
 
-      time = Time.parse(record['timestamp'])
+      time = Time.parse(record['timestamp']) rescue Time.now
       router.emit(@tag, time.to_i, record)
     end
   end
@@ -238,7 +238,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       uri = Addressable::URI.parse(uri)
 
       [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
-        record["request.uri.#{key}"] = uri.send(key)
+        record["request.uri.#{key}"] = uri.send(key) rescue nil
       end
     rescue => e
       @log.warn("#{e.message}: #{uri}")
