@@ -237,8 +237,10 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     begin
       uri = Addressable::URI.parse(uri)
 
-      [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
-        record["request.uri.#{key}"] = uri.send(key) rescue nil
+      if uri
+        [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
+          record["request.uri.#{key}"] = uri.send(key)
+        end
       end
     rescue => e
       @log.warn("#{e.message}: #{uri}")
