@@ -228,6 +228,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
   def parse_request!(record)
     request = record['request']
+    return unless request
     method, uri, http_version = request.split(' ', 3)
 
     record['request.method'] = method
