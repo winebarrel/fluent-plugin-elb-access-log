@@ -38,3 +38,7 @@ region #{region}
   tag = options[:tag] || 'test.default'
   Fluent::Test::OutputTestDriver.new(Fluent::ElbAccessLogInput, tag).configure(fluentd_conf)
 end
+
+# prevent Test::Unit's AutoRunner from executing during RSpec's rake task
+# ref: https://github.com/rspec/rspec-rails/issues/1171
+Test::Unit.run = true if defined?(Test::Unit) && Test::Unit.respond_to?(:run=)
