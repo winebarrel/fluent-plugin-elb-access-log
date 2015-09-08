@@ -32,8 +32,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     define_method('router') { Fluent::Engine }
   end
 
-  config_param :aws_key_id,        :string,  :default => nil
-  config_param :aws_sec_key,       :string,  :default => nil
+  config_param :aws_key_id,        :string,  :default => nil, :secret => true
+  config_param :aws_sec_key,       :string,  :default => nil, :secret => true
   config_param :profile,           :string,  :default => nil
   config_param :credentials_path,  :string,  :default => nil
   config_param :http_proxy,        :string,  :default => nil
