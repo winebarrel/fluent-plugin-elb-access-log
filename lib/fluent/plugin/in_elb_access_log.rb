@@ -1,3 +1,4 @@
+require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
 class Fluent::ElbAccessLogInput < Fluent::Input
