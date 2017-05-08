@@ -1,4 +1,5 @@
 require 'fluent/test'
+require 'fluent/test/driver/input'
 require 'fluent/plugin/in_elb_access_log'
 
 require 'aws-sdk'
@@ -36,7 +37,7 @@ region #{region}
   EOS
 
   tag = options[:tag] || 'test.default'
-  Fluent::Test::OutputTestDriver.new(Fluent::ElbAccessLogInput, tag).configure(fluentd_conf)
+  Fluent::Test::Driver::Input.new(Fluent::Plugin::ElbAccessLogInput).configure(fluentd_conf)
 end
 
 # prevent Test::Unit's AutoRunner from executing during RSpec's rake task

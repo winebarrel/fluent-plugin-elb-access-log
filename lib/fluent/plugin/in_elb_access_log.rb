@@ -1,7 +1,7 @@
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
-class Fluent::ElbAccessLogInput < Fluent::Input
+class Fluent::Plugin::ElbAccessLogInput < Fluent::Plugin::Input
   Fluent::Plugin.register_input('elb_access_log', self)
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
@@ -113,6 +113,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def shutdown
     @loop.stop
     @thread.join
+    super
   end
 
   private
