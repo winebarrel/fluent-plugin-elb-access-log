@@ -166,7 +166,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
     parsed_access_log = []
 
-    normalize_line_feeds(access_log).split("\n").each do |line|
+    access_log.split("\n").each do |line|
       line = parse_line(line)
       parsed_access_log << line if line
     end
@@ -183,8 +183,13 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
       parse_request!(record)
 
-      time = Time.parse(record['timestamp']) rescue Time.now
-      router.emit(@tag, time.to_i, record)
+      begin
+        time = Time.parse(record['timestamp'])
+        router.emit(@tag, time.to_i, record)
+      rescue ArgumentError => e
+        @log.warn("#{e.message}: #{row}")
+        @log.warn('A record that has bad timestamp is not emitted.')
+      end
     end
   end
 
@@ -213,32 +218,6 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     end
 
     parsed
-  end
-
-  # This method is required because fields of user-agent are sometimes separated
-  # to several lines like flollowing example,
-  # 2017-06-07T22:47:14.827494Z baby 162.243.126.163:37036 10.6.49.1:80 0.000042 0.004133 0.00002 301 301 0 232 "GET http://example.com:80/ HTTP/1.0" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133
-  #          Safari/537.36
-  #" - -
-  def normalize_line_feeds(str)
-    in_quotation = false
-    normalized_str = ''
-    previous_ch = nil
-
-    str.each_char do |current_ch|
-      if in_quotation && current_ch == "\n"
-        normalized_str << ' '
-      else
-        normalized_str << current_ch
-      end
-
-      if current_ch == '"' && previous_ch != '"'
-        in_quotation = !in_quotation
-      end
-      previous_ch = current_ch
-    end
-
-    normalized_str
   end
 
   def sampling(access_log)
