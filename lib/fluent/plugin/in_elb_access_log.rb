@@ -31,14 +31,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Plugin::Input
     'ssl_protocol'             => nil,
   }
 
-  unless method_defined?(:log)
-    define_method('log') { $log }
-  end
-
-  unless method_defined?(:router)
-    define_method('router') { Fluent::Engine }
-  end
-
   config_param :aws_key_id,        :string,  :default => nil, :secret => true
   config_param :aws_sec_key,       :string,  :default => nil, :secret => true
   config_param :profile,           :string,  :default => nil
@@ -57,10 +49,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Plugin::Input
   config_param :history_length,    :integer, :default => 100
   config_param :sampling_interval, :integer, :default => 1
   config_param :debug,             :bool,    :default => false
-
-  def initialize
-    super
-  end
 
   def configure(conf)
     super
