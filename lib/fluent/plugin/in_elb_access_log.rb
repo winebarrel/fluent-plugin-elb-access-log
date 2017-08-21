@@ -1,7 +1,13 @@
+require 'csv'
+require 'fileutils'
+require 'logger'
+require 'time'
+require 'addressable/uri'
+require 'aws-sdk'
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
-class Fluent::ElbAccessLogInput < Fluent::Input
+class Fluent::Plugin::ElbAccessLogInput < Fluent::Plugin::Input
   Fluent::Plugin.register_input('elb_access_log', self)
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
@@ -25,14 +31,6 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     'ssl_protocol'             => nil,
   }
 
-  unless method_defined?(:log)
-    define_method('log') { $log }
-  end
-
-  unless method_defined?(:router)
-    define_method('router') { Fluent::Engine }
-  end
-
   config_param :aws_key_id,        :string,  :default => nil, :secret => true
   config_param :aws_sec_key,       :string,  :default => nil, :secret => true
   config_param :profile,           :string,  :default => nil
@@ -51,16 +49,6 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :history_length,    :integer, :default => 100
   config_param :sampling_interval, :integer, :default => 1
   config_param :debug,             :bool,    :default => false
-
-  def initialize
-    super
-    require 'csv'
-    require 'fileutils'
-    require 'logger'
-    require 'time'
-    require 'addressable/uri'
-    require 'aws-sdk'
-  end
 
   def configure(conf)
     super
@@ -113,6 +101,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def shutdown
     @loop.stop
     @thread.join
+    super
   end
 
   private

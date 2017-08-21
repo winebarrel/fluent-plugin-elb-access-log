@@ -1,4 +1,4 @@
-describe Fluent::ElbAccessLogInput do
+describe Fluent::Plugin::ElbAccessLogInput do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
   let(:region) { 'us-west-1' }
@@ -28,9 +28,9 @@ describe Fluent::ElbAccessLogInput do
 
   before do
     Timecop.freeze(today)
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:client) { client }
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:client) { client }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
     allow(FileUtils).to receive(:touch)
   end
 
@@ -38,7 +38,7 @@ describe Fluent::ElbAccessLogInput do
     Timecop.return
   end
 
-  subject { x = driver.emits; x }
+  subject { x = driver.events; x }
 
   context 'when access log does not exist' do
     before do
