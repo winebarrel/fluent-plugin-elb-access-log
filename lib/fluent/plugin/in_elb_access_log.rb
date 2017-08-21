@@ -1,3 +1,9 @@
+require 'csv'
+require 'fileutils'
+require 'logger'
+require 'time'
+require 'addressable/uri'
+require 'aws-sdk'
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
@@ -54,12 +60,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Plugin::Input
 
   def initialize
     super
-    require 'csv'
-    require 'fileutils'
-    require 'logger'
-    require 'time'
-    require 'addressable/uri'
-    require 'aws-sdk'
   end
 
   def configure(conf)
