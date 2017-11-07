@@ -1,9 +1,10 @@
 require 'fluent/test'
 require 'fluent/plugin/in_elb_access_log'
 
-require 'aws-sdk'
+require 'aws-sdk-s3'
 require 'time'
 require 'timecop'
+require 'rspec/match_table'
 
 # Disable Test::Unit
 module Test::Unit::RunCount; def run(*); end; end
