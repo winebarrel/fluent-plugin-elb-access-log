@@ -1,20 +1,14 @@
+require 'coveralls'
+Coveralls.wear!
+
 require 'fluent/test'
+require 'fluent/test/driver/input'
 require 'fluent/plugin/in_elb_access_log'
 
 require 'aws-sdk-s3'
 require 'time'
 require 'timecop'
 require 'rspec/match_table'
-
-if ENV['TRAVIS']
-  require 'simplecov'
-  require 'coveralls'
-
-  SimpleCov.formatter = Coveralls::SimpleCov::Formatter
-  SimpleCov.start do
-    add_filter "spec/"
-  end
-end
 
 # Disable Test::Unit
 module Test::Unit::RunCount; def run(*); end; end
@@ -46,8 +40,14 @@ region #{region}
 #{additional_options}
   EOS
 
-  tag = options[:tag] || 'test.default'
-  Fluent::Test::OutputTestDriver.new(Fluent::ElbAccessLogInput, tag).configure(fluentd_conf)
+  Fluent::Test::Driver::Input.new(Fluent::Plugin::ElbAccessLogInput).configure(fluentd_conf)
+end
+
+def driver_run(driver)
+  driver.run do
+    coolio_loop = driver.instance.instance_variable_get(:@loop)
+    sleep 0.1 until coolio_loop.instance_variable_get(:@running)
+  end
 end
 
 # prevent Test::Unit's AutoRunner from executing during RSpec's rake task

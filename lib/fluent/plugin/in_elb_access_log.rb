@@ -1,7 +1,15 @@
+require 'csv'
+require 'fileutils'
+require 'logger'
+require 'time'
+require 'addressable/uri'
+require 'aws-sdk-s3'
+require 'zlib'
+
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
-class Fluent::ElbAccessLogInput < Fluent::Input
+class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   Fluent::Plugin.register_input('elb_access_log', self)
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
@@ -79,17 +87,6 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   config_param :history_length,    :integer, default: 100
   config_param :sampling_interval, :integer, default: 1
   config_param :debug,             :bool,    default: false
-
-  def initialize
-    super
-    require 'csv'
-    require 'fileutils'
-    require 'logger'
-    require 'time'
-    require 'addressable/uri'
-    require 'aws-sdk-s3'
-    require 'zlib'
-  end
 
   def configure(conf)
     super
@@ -443,4 +440,4 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       @log.error_backtrace(e.backtrace)
     end
   end # TimerWatcher
-end # Fluent::ElbAccessLogInput
+end # Fluent::Plugin::ElbAccessLogInput
