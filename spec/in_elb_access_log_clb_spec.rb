@@ -33,7 +33,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
     allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
     allow(FileUtils).to receive(:touch)
     expect(driver.instance.log).to_not receive(:error)
- end
+  end
 
   after do
     Timecop.return

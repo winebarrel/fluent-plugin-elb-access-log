@@ -760,4 +760,62 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
     it { is_expected.to match_table expected_emits }
   end
+
+  context 'when inflate fails' do
+    let(:today_access_log) do
+      <<-EOS
+https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+      EOS
+    end
+
+    before do
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+        [double('today_objects', contents: [double('today_object', key: today_object_key)])]
+      end
+
+      expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
+        double('today_s3_object', body: StringIO.new(today_access_log))
+      end
+
+      expect(driver.instance).to receive(:save_history)
+    end
+
+    specify do
+      expect(driver.instance.log).to receive(:warn).with('incorrect header check: "https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.')
+      driver_run(driver)
+    end
+  end
+
+  context 'when bad timestamp' do
+    let(:today_access_log) do
+      Zlib::Deflate.deflate(<<-EOS)
+https xxx hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+      EOS
+    end
+
+    before do
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+
+      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+        [double('today_objects', contents: [double('today_object', key: today_object_key)])]
+      end
+
+      expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
+        double('today_s3_object', body: StringIO.new(today_access_log))
+      end
+
+      expect(driver.instance).to receive(:save_timestamp).with(today)
+      expect(driver.instance).to receive(:save_history)
+    end
+
+    specify do
+      expect(driver.instance.log).to receive(:warn).with(/no time information in "xxx":/)
+      expect(driver.instance.log).to receive(:warn).with('A record that has bad timestamp is not emitted.')
+      driver_run(driver)
+    end
+  end
 end

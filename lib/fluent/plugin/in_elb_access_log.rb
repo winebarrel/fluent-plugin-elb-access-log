@@ -143,6 +143,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   def run
     @loop.run
   rescue => e
+    p e
     log.error(e.message)
     log.error_backtrace(e.backtrace)
   end
@@ -201,8 +202,13 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     records = parse_log(access_log)
 
     records.each do |record|
-      time = Time.parse(record['timestamp'])
-      router.emit(@tag, time.to_i, record)
+      begin
+        time = Time.parse(record['timestamp'])
+        router.emit(@tag, time.to_i, record)
+      rescue ArgumentError => e
+        @log.warn("#{e.message}: #{record}")
+        @log.warn('A record that has bad timestamp is not emitted.')
+      end
     end
   end
 
@@ -215,9 +221,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         line = parse_clb_line(line)
       when 'alb'
         line = parse_alb_line(line)
-      else
-        # It is a bug if an exception is thrown
-        raise 'must not happen'
       end
 
       parsed_access_log << line if line
@@ -227,32 +230,24 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     access_log_fields = ACCESS_LOG_FIELDS.fetch(@elb_type)
 
     parsed_access_log.each do |row|
-      begin
-        record = Hash[access_log_fields.keys.zip(row)]
+      record = Hash[access_log_fields.keys.zip(row)]
 
-        access_log_fields.each do |name, conv|
-          record[name] = record[name].send(conv) if conv
-        end
-
-        split_address_port!(record, 'client')
-
-        case @elb_type
-        when 'clb'
-          split_address_port!(record, 'backend')
-        when 'alb'
-          split_address_port!(record, 'target')
-        else
-          # It is a bug if an exception is thrown
-          raise 'must not happen'
-        end
-
-        parse_request!(record)
-
-        records << record
-      rescue ArgumentError => e
-        @log.warn("#{e.message}: #{row}")
-        @log.warn('A record that has bad timestamp is not emitted.')
+      access_log_fields.each do |name, conv|
+        record[name] = record[name].send(conv) if conv
       end
+
+      split_address_port!(record, 'client')
+
+      case @elb_type
+      when 'clb'
+        split_address_port!(record, 'backend')
+      when 'alb'
+        split_address_port!(record, 'target')
+      end
+
+      parse_request!(record)
+
+      records << record
     end
 
     records
