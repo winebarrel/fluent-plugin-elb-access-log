@@ -1,4 +1,4 @@
-describe Fluent::ElbAccessLogInput do
+describe Fluent::Plugin::ElbAccessLogInput do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
   let(:region) { 'us-west-1' }
@@ -29,9 +29,9 @@ describe Fluent::ElbAccessLogInput do
 
   before do
     Timecop.freeze(today)
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:client) { client }
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:load_history) { [] }
-    allow_any_instance_of(Fluent::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:client) { client }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
     allow(FileUtils).to receive(:touch)
     expect(driver.instance.log).to_not receive(:error)
   end
@@ -40,7 +40,7 @@ describe Fluent::ElbAccessLogInput do
     Timecop.return
   end
 
-  subject { driver.emits }
+  subject { driver.events }
 
   context 'when access log does not exist' do
     before do
@@ -51,7 +51,7 @@ describe Fluent::ElbAccessLogInput do
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     it { is_expected.to be_empty }
@@ -97,7 +97,7 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
@@ -302,7 +302,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       allow(Addressable::URI).to receive(:parse).and_raise('parse error')
       expect(driver.instance.log).to receive(:warn).with('parse error: http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/')
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
@@ -376,7 +376,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
@@ -449,7 +449,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
@@ -521,7 +521,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(CSV).to receive(:parse_line).and_raise('parse error')
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
@@ -610,7 +610,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     it { is_expected.to be_empty }
@@ -639,7 +639,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     it { is_expected.to be_empty }
@@ -675,7 +675,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
     context 'when history.length <= 100' do
       before do
-        driver.run
+        driver_run(driver)
       end
 
       it { is_expected.to eq 1 }
@@ -684,7 +684,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     context 'when history.length > 100' do
       before do
         history.concat (1..100).map(&:to_s)
-        driver.run
+        driver_run(driver)
       end
 
       it { is_expected.to eq 100 }
@@ -714,7 +714,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
-      driver.run
+      driver_run(driver)
     end
 
     let(:expected_emits) do
