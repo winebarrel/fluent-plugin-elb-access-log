@@ -143,7 +143,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   def run
     @loop.run
   rescue => e
-    p e
     log.error(e.message)
     log.error_backtrace(e.backtrace)
   end
