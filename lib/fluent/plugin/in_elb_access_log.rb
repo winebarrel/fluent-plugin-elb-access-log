@@ -6,8 +6,8 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
 
-  # http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html#access-log-entry-format
   ACCESS_LOG_FIELDS = {
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
     'clb' => {
       'timestamp'                => nil,
       'elb'                      => nil,
@@ -25,6 +25,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       'ssl_cipher'               => nil,
       'ssl_protocol'             => nil,
     },
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
     'alb' => {
       'type'                     => nil,
       'timestamp'                => nil,
