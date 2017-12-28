@@ -6,24 +6,51 @@ class Fluent::ElbAccessLogInput < Fluent::Input
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
 
-  # http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html#access-log-entry-format
   ACCESS_LOG_FIELDS = {
-    'timestamp'                => nil,
-    'elb'                      => nil,
-    'client_port'              => nil,
-    'backend_port'             => nil,
-    'request_processing_time'  => :to_f,
-    'backend_processing_time'  => :to_f,
-    'response_processing_time' => :to_f,
-    'elb_status_code'          => :to_i,
-    'backend_status_code'      => :to_i,
-    'received_bytes'           => :to_i,
-    'sent_bytes'               => :to_i,
-    'request'                  => nil,
-    'user_agent'               => nil,
-    'ssl_cipher'               => nil,
-    'ssl_protocol'             => nil,
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
+    'clb' => {
+      'timestamp'                => nil,
+      'elb'                      => nil,
+      'client_port'              => nil,
+      'backend_port'             => nil,
+      'request_processing_time'  => :to_f,
+      'backend_processing_time'  => :to_f,
+      'response_processing_time' => :to_f,
+      'elb_status_code'          => :to_i,
+      'backend_status_code'      => :to_i,
+      'received_bytes'           => :to_i,
+      'sent_bytes'               => :to_i,
+      'request'                  => nil,
+      'user_agent'               => nil,
+      'ssl_cipher'               => nil,
+      'ssl_protocol'             => nil,
+    },
+    # http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
+    'alb' => {
+      'type'                     => nil,
+      'timestamp'                => nil,
+      'elb'                      => nil,
+      'client_port'              => nil,
+      'target_port'              => nil,
+      'request_processing_time'  => :to_f,
+      'target_processing_time'   => :to_f,
+      'response_processing_time' => :to_f,
+      'elb_status_code'          => :to_i,
+      'target_status_code'       => :to_i,
+      'received_bytes'           => :to_i,
+      'sent_bytes'               => :to_i,
+      'request'                  => nil,
+      'user_agent'               => nil,
+      'ssl_cipher'               => nil,
+      'ssl_protocol'             => nil,
+      'target_group_arn'         => nil,
+      'trace_id'                 => nil,
+      'domain_name'              => nil,
+      'chosen_cert_arn'          => nil,
+    },
   }
+
+  ELB_TYPES = %(clb alb)
 
   unless method_defined?(:log)
     define_method('log') { $log }
@@ -33,24 +60,25 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     define_method('router') { Fluent::Engine }
   end
 
-  config_param :aws_key_id,        :string,  :default => nil, :secret => true
-  config_param :aws_sec_key,       :string,  :default => nil, :secret => true
-  config_param :profile,           :string,  :default => nil
-  config_param :credentials_path,  :string,  :default => nil
-  config_param :http_proxy,        :string,  :default => nil
+  config_param :elb_type,          :string,  default: 'clb'
+  config_param :aws_key_id,        :string,  default: nil, secret: true
+  config_param :aws_sec_key,       :string,  default: nil, secret: true
+  config_param :profile,           :string,  default: nil
+  config_param :credentials_path,  :string,  default: nil
+  config_param :http_proxy,        :string,  default: nil
   config_param :account_id,        :string
   config_param :region,            :string
   config_param :s3_bucket,         :string
-  config_param :s3_prefix,         :string,  :default => nil
-  config_param :tag,               :string,  :default => 'elb.access_log'
-  config_param :tsfile_path,       :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.ts'
-  config_param :histfile_path,     :string,  :default => '/var/tmp/fluent-plugin-elb-access-log.history'
-  config_param :interval,          :time,    :default => 300
-  config_param :start_datetime,    :string,  :default => nil
-  config_param :buffer_sec,        :time,    :default => 600
-  config_param :history_length,    :integer, :default => 100
-  config_param :sampling_interval, :integer, :default => 1
-  config_param :debug,             :bool,    :default => false
+  config_param :s3_prefix,         :string,  default: nil
+  config_param :tag,               :string,  default: 'elb.access_log'
+  config_param :tsfile_path,       :string,  default: '/var/tmp/fluent-plugin-elb-access-log.ts'
+  config_param :histfile_path,     :string,  default: '/var/tmp/fluent-plugin-elb-access-log.history'
+  config_param :interval,          :time,    default: 300
+  config_param :start_datetime,    :string,  default: nil
+  config_param :buffer_sec,        :time,    default: 600
+  config_param :history_length,    :integer, default: 100
+  config_param :sampling_interval, :integer, default: 1
+  config_param :debug,             :bool,    default: false
 
   def initialize
     super
@@ -59,11 +87,16 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     require 'logger'
     require 'time'
     require 'addressable/uri'
-    require 'aws-sdk'
+    require 'aws-sdk-s3'
+    require 'zlib'
   end
 
   def configure(conf)
     super
+
+    unless ELB_TYPES.include?(@elb_type)
+      raise raise Fluent::ConfigError, "Invalid ELB type: #{@elb_type}"
+    end
 
     FileUtils.touch(@tsfile_path)
     FileUtils.touch(@histfile_path)
@@ -113,6 +146,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def shutdown
     @loop.stop
     @thread.join
+    super
   end
 
   private
@@ -128,17 +162,28 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     last_timestamp = timestamp
 
     prefixes(timestamp).each do |prefix|
-      client.list_objects(:bucket => @s3_bucket, :prefix => prefix).each do |page|
+      client.list_objects(bucket: @s3_bucket, prefix: prefix).each do |page|
         page.contents.each do |obj|
           account_id, logfile_const, region, elb_name, logfile_datetime, ip, logfile_suffix = obj.key.split('_', 7)
           logfile_datetime = Time.parse(logfile_datetime)
 
-          if logfile_suffix !~ /\.log\z/ or logfile_datetime <= (timestamp - @buffer_sec)
+          if logfile_suffix !~ /\.log(\.gz)?\z/ or logfile_datetime <= (timestamp - @buffer_sec)
             next
           end
 
           unless @history.include?(obj.key)
             access_log = client.get_object(bucket: @s3_bucket, key: obj.key).body.string
+
+            if obj.key.end_with?('.gz')
+              begin
+                inflated = Zlib::Inflate.inflate(access_log)
+                access_log = inflated
+              rescue Zlib::Error => e
+                @log.warn("#{e.message}: #{access_log.inspect.slice(0, 64)}")
+                next
+              end
+            end
+
             emit_access_log(access_log)
             last_timestamp = logfile_datetime
             @history.push(obj.key)
@@ -164,40 +209,71 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       access_log = sampling(access_log)
     end
 
+    records = parse_log(access_log)
+
+    records.each do |record|
+      time = Time.parse(record['timestamp'])
+      router.emit(@tag, time.to_i, record)
+    end
+  end
+
+  def parse_log(access_log)
     parsed_access_log = []
 
     access_log.split("\n").each do |line|
-      line = parse_line(line)
+      case @elb_type
+      when 'clb'
+        line = parse_clb_line(line)
+      when 'alb'
+        line = parse_alb_line(line)
+      else
+        # It is a bug if an exception is thrown
+        raise 'must not happen'
+      end
+
       parsed_access_log << line if line
     end
 
+    records = []
+    access_log_fields = ACCESS_LOG_FIELDS.fetch(@elb_type)
+
     parsed_access_log.each do |row|
-      record = Hash[ACCESS_LOG_FIELDS.keys.zip(row)]
-
-      ACCESS_LOG_FIELDS.each do |name, conv|
-        record[name] = record[name].send(conv) if conv
-      end
-
-      split_address_port!(record, 'client')
-      split_address_port!(record, 'backend')
-
-      parse_request!(record)
-
       begin
-        time = Time.parse(record['timestamp'])
-        router.emit(@tag, time.to_i, record)
+        record = Hash[access_log_fields.keys.zip(row)]
+
+        access_log_fields.each do |name, conv|
+          record[name] = record[name].send(conv) if conv
+        end
+
+        split_address_port!(record, 'client')
+
+        case @elb_type
+        when 'clb'
+          split_address_port!(record, 'backend')
+        when 'alb'
+          split_address_port!(record, 'target')
+        else
+          # It is a bug if an exception is thrown
+          raise 'must not happen'
+        end
+
+        parse_request!(record)
+
+        records << record
       rescue ArgumentError => e
         @log.warn("#{e.message}: #{row}")
         @log.warn('A record that has bad timestamp is not emitted.')
       end
     end
+
+    records
   end
 
-  def parse_line(line)
+  def parse_clb_line(line)
     parsed = nil
 
     begin
-      parsed = CSV.parse_line(line, :col_sep => ' ')
+      parsed = CSV.parse_line(line, col_sep: ' ')
     rescue => e
       begin
         parsed = line.split(' ', 12)
@@ -207,11 +283,42 @@ class Fluent::ElbAccessLogInput < Fluent::Input
         parsed[11].sub!(/\A"/, '')
         parsed[11].sub!(/"(.*)\z/, '')
 
-        user_agent, ssl_cipher, ssl_protocol = $1.strip.split(' ', 3)
-        user_agent.sub!(/\A"/, '').sub!(/"\z/, '') if user_agent
-        parsed[12] = user_agent
+        user_agent, ssl_cipher, ssl_protocol = rsplit($1.strip, ' ', 3)
+
+        parsed[12] = unquote(user_agent)
         parsed[13] = ssl_cipher
         parsed[14] = ssl_protocol
+      rescue => e2
+        @log.warn("#{e.message}: #{line}")
+      end
+    end
+
+    parsed
+  end
+
+  def parse_alb_line(line)
+    parsed = nil
+
+    begin
+      parsed = CSV.parse_line(line, col_sep: ' ')
+    rescue => e
+      begin
+        parsed = line.split(' ', 13)
+
+        # request
+        parsed[12] ||= ''
+        parsed[12].sub!(/\A"/, '')
+        parsed[12].sub!(/"(.*)\z/, '')
+
+        user_agent, ssl_cipher, ssl_protocol, target_group_arn, trace_id, domain_name, chosen_cert_arn = rsplit($1.strip, ' ', 7)
+
+        parsed[13] = unquote(user_agent)
+        parsed[14] = ssl_cipher
+        parsed[15] = ssl_protocol
+        parsed[16] = target_group_arn
+        parsed[17] = unquote(trace_id)
+        parsed[18] = unquote(domain_name)
+        parsed[19] = unquote(chosen_cert_arn)
       rescue => e2
         @log.warn("#{e.message}: #{line}")
       end
@@ -279,7 +386,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
   def client
     return @client if @client
 
-    options = {:user_agent_suffix => USER_AGENT_SUFFIX}
+    options = {user_agent_suffix: USER_AGENT_SUFFIX}
     options[:region] = @region if @region
     options[:http_proxy] = @http_proxy if @http_proxy
 
@@ -287,7 +394,7 @@ class Fluent::ElbAccessLogInput < Fluent::Input
       options[:access_key_id] = @aws_key_id
       options[:secret_access_key] = @aws_sec_key
     elsif @profile
-      credentials_opts = {:profile_name => @profile}
+      credentials_opts = {profile_name: @profile}
       credentials_opts[:path] = @credentials_path if @credentials_path
       credentials = Aws::SharedCredentials.new(credentials_opts)
       options[:credentials] = credentials
@@ -300,6 +407,26 @@ class Fluent::ElbAccessLogInput < Fluent::Input
     end
 
     @client = Aws::S3::Client.new(options)
+  end
+
+  def rsplit(str, sep, n)
+    str = str.dup
+    substrs = []
+
+    (n - 1).times do
+      pos = str.rindex(sep)
+      next unless pos
+      substr = str.slice!(pos..-1).slice(sep.length..-1)
+      substrs << substr
+    end
+
+    substrs << str
+    substrs.reverse
+  end
+
+  def unquote(str)
+    return nil if (str || '').empty?
+    str.sub(/\A"/, '').sub(/"\z/, '')
   end
 
   class TimerWatcher < Coolio::TimerWatcher

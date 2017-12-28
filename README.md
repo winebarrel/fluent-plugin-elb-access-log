@@ -46,10 +46,15 @@ Or install it yourself as:
   #history_length 100
   #sampling_interval 1
   #debug false
+  #elb_type clb # or alb
 </source>
 ```
 
-```javascript
+## Outout
+
+### CLB
+
+```json
 // elb.access_log:
 {
   "timestamp":"2015-05-24T08:25:36.229576Z",
@@ -82,9 +87,41 @@ Or install it yourself as:
 }
 ```
 
-# Difference with [fluent-plugin-elb-log](https://github.com/shinsaka/fluent-plugin-elb-log)
+### ALB
 
-* Use AWS SDK for Ruby V2.
-* It is possible to change the record tag.
-* List objects with prefix.
-* Perse request line URI.
+```json
+{
+  "type": "https",
+  "timestamp": "2015-05-24T19:55:36.000000Z",
+  "elb": "hoge",
+  "client_port": 57673,
+  "target_port": 80,
+  "request_processing_time": 5.3e-05,
+  "target_processing_time": 0.000913,
+  "response_processing_time": 3.6e-05,
+  "elb_status_code": 200,
+  "target_status_code": 200,
+  "received_bytes": 0,
+  "sent_bytes": 3,
+  "request": "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+  "user_agent": "curl/7.30.0",
+  "ssl_cipher": "ssl_cipher",
+  "ssl_protocol": "ssl_protocol",
+  "target_group_arn": "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx",
+  "trace_id": "Root=xxx",
+  "domain_name": "-",
+  "chosen_cert_arn": "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx",
+  "client": "14.14.124.20",
+  "target": "10.0.199.184",
+  "request.method": "GET",
+  "request.uri": "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+  "request.http_version": "HTTP/1.1",
+  "request.uri.scheme": "http",
+  "request.uri.user": null,
+  "request.uri.host": "hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+  "request.uri.port": 80,
+  "request.uri.path": "/",
+  "request.uri.query": null,
+  "request.uri.fragment": null
+}
+```

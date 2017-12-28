@@ -43,6 +43,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.history_length).to eq 100
       expect(driver.instance.sampling_interval).to eq 1
       expect(driver.instance.debug).to be_falsey
+      expect(driver.instance.elb_type).to eq 'clb'
     end
   end
 
@@ -61,6 +62,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
     let(:buffer_sec) { 1200 }
     let(:history_length) { 200 }
     let(:sampling_interval) { 100 }
+    let(:elb_type) { 'alb' }
 
     let(:fluentd_conf) do
       {
@@ -82,6 +84,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
         history_length: history_length,
         sampling_interval: sampling_interval,
         debug: true,
+        elb_type: elb_type,
       }
     end
 
@@ -103,6 +106,7 @@ describe 'Fluent::ElbAccessLogInput#configure' do
       expect(driver.instance.history_length).to eq history_length
       expect(driver.instance.sampling_interval).to eq sampling_interval
       expect(driver.instance.debug).to be_truthy
+      expect(driver.instance.elb_type).to eq elb_type
     end
   end
 
@@ -164,6 +168,26 @@ describe 'Fluent::ElbAccessLogInput#configure' do
 
     it do
       expect(driver.instance.start_datetime).to eq Time.parse(tsfile_datetime)
+    end
+  end
+
+  context 'when an invalid ELB type' do
+    let(:start_datetime) { '2015-01-01 01:02:03 UTC' }
+
+    let(:fluentd_conf) do
+      {
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: start_datetime,
+        elb_type: 'invalid',
+      }
+    end
+
+    it do
+      expect {
+        subject
+      }.to raise_error 'Invalid ELB type: invalid'
     end
   end
 end
