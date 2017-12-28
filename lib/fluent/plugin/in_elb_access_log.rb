@@ -272,7 +272,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         parsed[13] = ssl_cipher
         parsed[14] = ssl_protocol
       rescue => e2
-        @log.warn("#{e.message}: #{line}")
+        @log.warn("#{e.message}: #{e2.message}: #{line}")
       end
     end
 
@@ -303,7 +303,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         parsed[18] = unquote(domain_name)
         parsed[19] = unquote(chosen_cert_arn)
       rescue => e2
-        @log.warn("#{e.message}: #{line}")
+        @log.warn("#{e.message}: #{e2.message}: #{line}")
       end
     end
 
