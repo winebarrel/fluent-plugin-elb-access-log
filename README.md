@@ -4,6 +4,7 @@ Fluentd input plugin for [AWS ELB Access Logs](http://docs.aws.amazon.com/Elasti
 
 [![Gem Version](https://badge.fury.io/rb/fluent-plugin-elb-access-log.svg)](http://badge.fury.io/rb/fluent-plugin-elb-access-log)
 [![Build Status](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log.svg?branch=master)](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log)
+[![Coverage Status](https://coveralls.io/repos/github/winebarrel/fluent-plugin-elb-access-log/badge.svg?branch=master)](https://coveralls.io/github/winebarrel/fluent-plugin-elb-access-log?branch=master)
 
 ## Installation
 
