@@ -3,7 +3,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
   let(:s3_bucket) { 'my-bucket' }
   let(:region) { 'us-west-1' }
   let(:driver) { create_driver(fluentd_conf) }
-  let(:client){ Aws::S3::Client.new(stub_responses: true) }
+  let!(:client){ Aws::S3::Client.new(stub_responses: true) }
 
   let(:fluentd_conf) do
     {
@@ -29,7 +29,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
 
   before do
     Timecop.freeze(today)
-    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:client) { client }
+    allow(Aws::S3::Client).to receive(:new) { client }
     allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:load_history) { [] }
     allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
     allow(FileUtils).to receive(:touch)
