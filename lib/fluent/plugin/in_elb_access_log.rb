@@ -60,14 +60,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
   ELB_TYPES = %(clb alb)
 
-  unless method_defined?(:log)
-    define_method('log') { $log }
-  end
-
-  unless method_defined?(:router)
-    define_method('router') { Fluent::Engine }
-  end
-
   config_param :elb_type,          :string,  default: 'clb'
   config_param :aws_key_id,        :string,  default: nil, secret: true
   config_param :aws_sec_key,       :string,  default: nil, secret: true
