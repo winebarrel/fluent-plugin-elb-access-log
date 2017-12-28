@@ -1,6 +1,6 @@
 # fluent-plugin-elb-access-log
 
-Fluentd input plugin for [AWS ELB Access Logs](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/access-log-collection.html).
+Fluentd input plugin for AWS ELB Access Logs.
 
 [![Gem Version](https://badge.fury.io/rb/fluent-plugin-elb-access-log.svg)](http://badge.fury.io/rb/fluent-plugin-elb-access-log)
 [![Build Status](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log.svg?branch=master)](https://travis-ci.org/winebarrel/fluent-plugin-elb-access-log)
@@ -55,6 +55,8 @@ Or install it yourself as:
 
 ### CLB
 
+see http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
+
 ```json
 // elb.access_log:
 {
@@ -89,6 +91,8 @@ Or install it yourself as:
 ```
 
 ### ALB
+
+see http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
 
 ```json
 {
