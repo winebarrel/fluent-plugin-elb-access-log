@@ -58,7 +58,6 @@ Or install it yourself as:
 see http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/access-log-collection.html
 
 ```json
-// elb.access_log:
 {
   "timestamp":"2015-05-24T08:25:36.229576Z",
   "elb":"hoge",
