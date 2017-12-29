@@ -134,6 +134,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
   def shutdown
     @loop.stop
+    @thread.kill
     @thread.join
     super
   end
