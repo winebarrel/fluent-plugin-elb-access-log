@@ -50,6 +50,16 @@ def driver_run(driver)
   end
 end
 
+def gzip(str)
+  io = StringIO.new
+
+  Zlib::GzipWriter.wrap(io) do |gz|
+    gz << str
+  end
+
+  io.string
+end
+
 # prevent Test::Unit's AutoRunner from executing during RSpec's rake task
 # ref: https://github.com/rspec/rspec-rails/issues/1171
 Test::Unit.run = true if defined?(Test::Unit) && Test::Unit.respond_to?(:run=)

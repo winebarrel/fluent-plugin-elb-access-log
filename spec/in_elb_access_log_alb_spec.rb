@@ -59,14 +59,14 @@ describe Fluent::Plugin::ElbAccessLogInput do
 
   context 'when access log exists' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
 
     let(:tomorrow_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
 https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
@@ -279,7 +279,7 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when include bad URI' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -344,7 +344,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when access log exists (with tag option)' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -426,7 +426,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when access old log exists' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -498,7 +498,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when parse error' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -569,7 +569,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
     context 'when no user_agent' do
       let(:today_access_log) do
-        Zlib::Deflate.deflate(<<-EOS)
+        gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1"
         EOS
       end
@@ -590,7 +590,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when access old log exists (timeout)' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -618,7 +618,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when emitted log exists' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -647,7 +647,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   describe 'history#length' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -693,7 +693,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
   context 'when no user_agent' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -784,14 +784,14 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     specify do
-      expect(driver.instance.log).to receive(:warn).with('incorrect header check: "https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.')
+      expect(driver.instance.log).to receive(:warn).with(/not in gzip format: /)
       driver_run(driver)
     end
   end
 
   context 'when bad timestamp' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https xxx hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end
@@ -821,7 +821,7 @@ https xxx hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200
 
   context 'when unquote fails' do
     let(:today_access_log) do
-      Zlib::Deflate.deflate(<<-EOS)
+      gzip(<<-EOS)
 https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
       EOS
     end

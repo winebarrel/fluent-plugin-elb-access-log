@@ -162,16 +162,17 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
           end
 
           unless @history.include?(obj.key)
-            access_log = client.get_object(bucket: @s3_bucket, key: obj.key).body.string
+            access_log = client.get_object(bucket: @s3_bucket, key: obj.key).body
 
             if obj.key.end_with?('.gz')
               begin
-                inflated = Zlib::Inflate.inflate(access_log)
-                access_log = inflated
+                access_log = Zlib::GzipReader.wrap(access_log, &:read)
               rescue Zlib::Error => e
                 @log.warn("#{e.message}: #{access_log.inspect.slice(0, 64)}")
                 next
               end
+            else
+              access_log = access_log.string
             end
 
             emit_access_log(access_log)
