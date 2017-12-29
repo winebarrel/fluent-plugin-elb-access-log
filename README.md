@@ -26,7 +26,7 @@ Or install it yourself as:
 
 ```apache
 <source>
-  type elb_access_log
+  @type elb_access_log
   #aws_key_id YOUR_ACCESS_KEY_ID
   #aws_sec_key YOUR_SECRET_ACCESS_KEY
   #profile PROFILE_NAME
