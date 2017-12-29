@@ -4,7 +4,7 @@ require 'logger'
 require 'time'
 require 'addressable/uri'
 require 'aws-sdk-s3'
-require 'zlib'
+require 'multiple_files_gzip_reader'
 
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
@@ -166,13 +166,17 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
             if obj.key.end_with?('.gz')
               begin
-                access_log = Zlib::GzipReader.wrap(access_log, &:read)
+                access_log = MultipleFilesGzipReader.new(access_log)
+
+                # check gzip formta
+                access_log.first
+                access_log.rewind
               rescue Zlib::Error => e
                 @log.warn("#{e.message}: #{access_log.inspect.slice(0, 64)}")
                 next
               end
             else
-              access_log = access_log.string
+              access_log = access_log.each_line
             end
 
             emit_access_log(access_log)
@@ -216,7 +220,9 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   def parse_log(access_log)
     parsed_access_log = []
 
-    access_log.split("\n").each do |line|
+    access_log.each do |line|
+      line.chomp!
+
       case @elb_type
       when 'clb'
         line = parse_clb_line(line)
@@ -313,7 +319,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   end
 
   def sampling(access_log)
-    access_log.split("\n").each_with_index.select {|row, i| (i % @sampling_interval).zero? }.map {|row, i| row }.join("\n")
+    access_log.each_with_index.select {|_, i| (i % @sampling_interval).zero? }.map(&:first)
   end
 
   def split_address_port!(record, prefix)

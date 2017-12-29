@@ -21,6 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'fluentd', '>= 0.14'
   spec.add_dependency 'aws-sdk-s3', '~> 1.8'
   spec.add_dependency 'addressable'
+  spec.add_dependency 'multiple_files_gzip_reader'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '>= 3.0.0'
