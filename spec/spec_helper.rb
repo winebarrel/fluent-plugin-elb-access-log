@@ -47,6 +47,7 @@ def driver_run(driver)
   driver.run do
     coolio_loop = driver.instance.instance_variable_get(:@loop)
     sleep 0.1 until coolio_loop.instance_variable_get(:@running)
+    sleep 0.1
   end
 end
 

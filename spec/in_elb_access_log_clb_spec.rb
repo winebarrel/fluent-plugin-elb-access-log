@@ -7,6 +7,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
 
   let(:fluentd_conf) do
     {
+      interval: 0,
       account_id: account_id,
       s3_bucket: s3_bucket,
       region: region,
@@ -231,6 +232,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
     context 'when sampling' do
       let(:fluentd_conf) do
         {
+          interval: 0,
           account_id: account_id,
           s3_bucket: s3_bucket,
           region: region,
@@ -314,6 +316,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
 
     let(:fluentd_conf) do
       {
+        interval: 0,
         account_id: account_id,
         s3_bucket: s3_bucket,
         region: region,

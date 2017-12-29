@@ -7,6 +7,7 @@ describe Fluent::Plugin::ElbAccessLogInput do
 
   let(:fluentd_conf) do
     {
+      interval: 0,
       account_id: account_id,
       s3_bucket: s3_bucket,
       region: region,
@@ -48,7 +49,6 @@ describe Fluent::Plugin::ElbAccessLogInput do
       expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) { [] }
       expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
       expect(driver.instance).to_not receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -94,7 +94,6 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(tomorrow)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -260,6 +259,7 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     context 'when sampling' do
       let(:fluentd_conf) do
         {
+          interval: 0,
           account_id: account_id,
           s3_bucket: s3_bucket,
           region: region,
@@ -297,7 +297,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
 
       allow(Addressable::URI).to receive(:parse).and_raise('parse error')
       expect(driver.instance.log).to receive(:warn).with('parse error: http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/')
@@ -351,6 +350,7 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
     let(:fluentd_conf) do
       {
+        interval: 0,
         account_id: account_id,
         s3_bucket: s3_bucket,
         region: region,
@@ -373,7 +373,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -446,7 +445,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to_not receive(:save_timestamp)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -516,7 +514,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
 
       expect(CSV).to receive(:parse_line).and_raise('parse error')
       expect(driver.instance.log).to_not receive(:warn)
@@ -607,7 +604,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
 
       expect(client).to_not receive(:get_object)
       expect(driver.instance).to_not receive(:save_timestamp)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -636,7 +632,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       history = driver.instance.instance_variable_get(:@history)
       history << today_object_key
       expect(driver.instance).to_not receive(:save_timestamp)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -667,7 +662,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
     end
 
@@ -711,7 +705,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
       expect(driver.instance.log).to_not receive(:warn)
 
       driver_run(driver)
@@ -780,7 +773,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
         double('today_s3_object', body: StringIO.new(today_access_log))
       end
 
-      expect(driver.instance).to receive(:save_history)
     end
 
     specify do
@@ -809,7 +801,6 @@ https xxx hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
     end
 
     specify do
@@ -839,7 +830,6 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
 
       expect(driver.instance).to receive(:save_timestamp).with(today)
-      expect(driver.instance).to receive(:save_history)
 
       expect(CSV).to receive(:parse_line).and_raise('parse error')
       expect(driver.instance).to receive(:unquote).and_raise('unquote error')
