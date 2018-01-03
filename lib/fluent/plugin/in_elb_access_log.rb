@@ -168,7 +168,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
               begin
                 access_log = MultipleFilesGzipReader.new(access_log)
 
-                # check gzip formta
+                # check gzip format
                 access_log.first
                 access_log.rewind
               rescue Zlib::Error => e
