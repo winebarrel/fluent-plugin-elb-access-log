@@ -58,7 +58,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     },
   }
 
-  ELB_TYPES = %(clb alb)
+  ELB_TYPES = ACCESS_LOG_FIELDS.keys
 
   config_param :elb_type,          :string,  default: 'clb'
   config_param :aws_key_id,        :string,  default: nil, secret: true
