@@ -82,6 +82,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :filter,            :hash,    default: nil
   config_param :filter_operator,   :string,  default: 'and'
   config_param :type_cast,         :bool,    default: true
+  config_param :parse_request,     :bool,    default: true
 
   def configure(conf)
     super
@@ -273,7 +274,9 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         end
       end
 
-      parse_request!(record)
+      if @parse_request
+        parse_request!(record)
+      end
 
       records << record
     end

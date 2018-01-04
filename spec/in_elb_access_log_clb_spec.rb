@@ -336,6 +336,28 @@ describe Fluent::Plugin::ElbAccessLogInput do
         is_expected.to match_table expected_emits_without_type_cast
       end
     end
+
+    context 'without request parsing' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          parse_request: 'false',
+        }
+      end
+
+      it do
+        expected_emits_without_request_parsing = expected_emits.map do |tag, ts, h|
+          h = Hash[h.select {|k, v| k !~ /\Arequest\./ }]
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_without_request_parsing
+      end
+    end
   end
 
   context 'when include bad URI' do

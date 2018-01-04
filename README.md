@@ -51,6 +51,7 @@ Or install it yourself as:
   #filter elb_status_code:^2,timestamp:^2018
   #filter_operator and # or "or"
   #type_cast true
+  #parse_request true
 </source>
 ```
 
