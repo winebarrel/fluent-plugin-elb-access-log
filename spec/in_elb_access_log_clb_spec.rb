@@ -256,12 +256,49 @@ describe Fluent::Plugin::ElbAccessLogInput do
           s3_bucket: s3_bucket,
           region: region,
           start_datetime: (today - 1).to_s,
-          filter: '{"timestamp": "2015-05-25"}'
+          filter: '{"timestamp": "2015-05-25"}',
         }
       end
 
       it do
         expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
+
+    context 'with filter (or)' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          filter: '{"timestamp": "2015-05-25"}',
+          filter_operator: 'or',
+        }
+      end
+
+      it do
+        expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
+
+    context 'with filter (or/multi)' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          filter: '{"timestamp": "2015-05-25", "elb_status_code": "^2"}',
+          filter_operator: 'or',
+        }
+      end
+
+      it do
         is_expected.to match_table expected_emits
       end
     end

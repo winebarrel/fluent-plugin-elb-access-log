@@ -80,12 +80,17 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :sampling_interval, :integer, default: 1
   config_param :debug,             :bool,    default: false
   config_param :filter,            :hash,    default: nil
+  config_param :filter_operator,   :string,  default: 'and'
 
   def configure(conf)
     super
 
     unless ELB_TYPES.include?(@elb_type)
-      raise raise Fluent::ConfigError, "Invalid ELB type: #{@elb_type}"
+      raise Fluent::ConfigError, "Invalid ELB type: #{@elb_type}"
+    end
+
+    unless %w(and or).include?(@filter_operator)
+      raise Fluent::ConfigError, "Invalid filter operator: #{@filter_operator}"
     end
 
     FileUtils.touch(@tsfile_path)
@@ -244,8 +249,12 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     parsed_access_log.each do |row|
       record = Hash[access_log_fields.keys.zip(row)]
 
-      if @filter and @filter.any? {|k, r| record[k] !~ r }
-        next
+      if @filter
+        if @filter_operator == 'or'
+          next if @filter.all? {|k, r| record[k] !~ r }
+        else
+          next if @filter.any? {|k, r| record[k] !~ r }
+        end
       end
 
       access_log_fields.each do |name, conv|
