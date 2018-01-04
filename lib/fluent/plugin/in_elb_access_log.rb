@@ -19,8 +19,8 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     'clb' => {
       'timestamp'                => nil,
       'elb'                      => nil,
-      'client_port'              => nil,
-      'backend_port'             => nil,
+      'client_port'              => :to_i,
+      'backend_port'             => :to_i,
       'request_processing_time'  => :to_f,
       'backend_processing_time'  => :to_f,
       'response_processing_time' => :to_f,
@@ -38,8 +38,8 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
       'type'                     => nil,
       'timestamp'                => nil,
       'elb'                      => nil,
-      'client_port'              => nil,
-      'target_port'              => nil,
+      'client_port'              => :to_i,
+      'target_port'              => :to_i,
       'request_processing_time'  => :to_f,
       'target_processing_time'   => :to_f,
       'response_processing_time' => :to_f,
@@ -58,7 +58,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     },
   }
 
-  ELB_TYPES = %(clb alb)
+  ELB_TYPES = ACCESS_LOG_FIELDS.keys
 
   config_param :elb_type,          :string,  default: 'clb'
   config_param :aws_key_id,        :string,  default: nil, secret: true
@@ -79,12 +79,20 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :history_length,    :integer, default: 100
   config_param :sampling_interval, :integer, default: 1
   config_param :debug,             :bool,    default: false
+  config_param :filter,            :hash,    default: nil
+  config_param :filter_operator,   :string,  default: 'and'
+  config_param :type_cast,         :bool,    default: true
+  config_param :parse_request,     :bool,    default: true
 
   def configure(conf)
     super
 
     unless ELB_TYPES.include?(@elb_type)
-      raise raise Fluent::ConfigError, "Invalid ELB type: #{@elb_type}"
+      raise Fluent::ConfigError, "Invalid ELB type: #{@elb_type}"
+    end
+
+    unless %w(and or).include?(@filter_operator)
+      raise Fluent::ConfigError, "Invalid filter operator: #{@filter_operator}"
     end
 
     FileUtils.touch(@tsfile_path)
@@ -102,6 +110,10 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     end
 
     @history = load_history
+
+    if @filter
+      @filter = Hash[@filter.map {|k, v| [k.to_s, Regexp.new(v.to_s)] }]
+    end
   end
 
   def start
@@ -239,10 +251,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     parsed_access_log.each do |row|
       record = Hash[access_log_fields.keys.zip(row)]
 
-      access_log_fields.each do |name, conv|
-        record[name] = record[name].send(conv) if conv
-      end
-
       split_address_port!(record, 'client')
 
       case @elb_type
@@ -252,7 +260,23 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         split_address_port!(record, 'target')
       end
 
-      parse_request!(record)
+      if @filter
+        if @filter_operator == 'or'
+          next if @filter.all? {|k, r| record[k] !~ r }
+        else
+          next if @filter.any? {|k, r| record[k] !~ r }
+        end
+      end
+
+      if @type_cast
+        access_log_fields.each do |name, conv|
+          record[name] = record[name].send(conv) if conv
+        end
+      end
+
+      if @parse_request
+        parse_request!(record)
+      end
 
       records << record
     end
@@ -327,7 +351,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     return unless address_port
     address, port = address_port.split(':', 2)
     record[prefix] = address
-    record["#{prefix}_port"] = port.to_i
+    record["#{prefix}_port"] = port
   end
 
   def parse_request!(record)
@@ -344,7 +368,13 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
       if uri
         [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
-          record["request.uri.#{key}"] = uri.send(key)
+          value = uri.send(key)
+
+          if not @type_cast and key == :port
+            value = value.to_s
+          end
+
+          record["request.uri.#{key}"] = value
         end
       end
     rescue => e

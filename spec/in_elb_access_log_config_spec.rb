@@ -44,6 +44,10 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.sampling_interval).to eq 1
       expect(driver.instance.debug).to be_falsey
       expect(driver.instance.elb_type).to eq 'clb'
+      expect(driver.instance.filter).to be_nil
+      expect(driver.instance.filter_operator).to eq 'and'
+      expect(driver.instance.type_cast).to be_truthy
+      expect(driver.instance.parse_request).to be_truthy
     end
   end
 
@@ -63,6 +67,8 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
     let(:history_length) { 200 }
     let(:sampling_interval) { 100 }
     let(:elb_type) { 'alb' }
+    let(:filter) { 'elb_status_code:^2' }
+    let(:filter_operator) { 'or' }
 
     let(:fluentd_conf) do
       {
@@ -85,6 +91,10 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
         sampling_interval: sampling_interval,
         debug: true,
         elb_type: elb_type,
+        filter: filter,
+        filter_operator: filter_operator,
+        type_cast: 'false',
+        parse_request: 'false',
       }
     end
 
@@ -107,6 +117,10 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.sampling_interval).to eq sampling_interval
       expect(driver.instance.debug).to be_truthy
       expect(driver.instance.elb_type).to eq elb_type
+      expect(driver.instance.filter).to eq('elb_status_code' => /^2/)
+      expect(driver.instance.filter_operator).to eq filter_operator
+      expect(driver.instance.type_cast).to be_falsey
+      expect(driver.instance.parse_request).to be_falsey
     end
   end
 
@@ -188,6 +202,26 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect {
         subject
       }.to raise_error 'Invalid ELB type: invalid'
+    end
+  end
+
+  context 'when an invalid filter operator' do
+    let(:start_datetime) { '2015-01-01 01:02:03 UTC' }
+
+    let(:fluentd_conf) do
+      {
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: start_datetime,
+        filter_operator: 'invalid',
+      }
+    end
+
+    it do
+      expect {
+        subject
+      }.to raise_error 'Invalid filter operator: invalid'
     end
   end
 end

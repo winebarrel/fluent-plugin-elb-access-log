@@ -275,6 +275,123 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
         is_expected.to match_table expected_emits
       end
     end
+
+    context 'with filter' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          filter: '{"timestamp": "2015-05-25"}',
+        }
+      end
+
+      it do
+        expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
+
+    context 'with filter (or)' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          filter: '{"timestamp": "2015-05-25"}',
+          filter_operator: 'or'
+        }
+      end
+
+      it do
+        expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
+
+    context 'with filter (or/multi)' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          filter: '{"timestamp": "2015-05-25", "elb_status_code": "^2"}',
+          filter_operator: 'or'
+        }
+      end
+
+      it do
+        is_expected.to match_table expected_emits
+      end
+    end
+
+    context 'without type cast' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          type_cast: 'false',
+        }
+      end
+
+      it do
+        expected_emits_without_type_cast = expected_emits.map do |tag, ts, h|
+          h = Hash[h.map {|k, v|
+            v = case v
+                when nil
+                  v
+                when Float
+                  "%.6f" % v
+                else
+                  v.to_s
+                end
+
+            [k, v]
+          }]
+
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_without_type_cast
+      end
+    end
+
+
+    context 'without request parsing' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          parse_request: 'false',
+        }
+      end
+
+      it do
+        expected_emits_without_request_parsing = expected_emits.map do |tag, ts, h|
+          h = Hash[h.select {|k, v| k !~ /\Arequest\./ }]
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_without_request_parsing
+      end
+    end
   end
 
   context 'when include bad URI' do
