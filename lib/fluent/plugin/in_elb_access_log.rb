@@ -19,8 +19,8 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     'clb' => {
       'timestamp'                => nil,
       'elb'                      => nil,
-      'client_port'              => nil,
-      'backend_port'             => nil,
+      'client_port'              => :to_i,
+      'backend_port'             => :to_i,
       'request_processing_time'  => :to_f,
       'backend_processing_time'  => :to_f,
       'response_processing_time' => :to_f,
@@ -38,8 +38,8 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
       'type'                     => nil,
       'timestamp'                => nil,
       'elb'                      => nil,
-      'client_port'              => nil,
-      'target_port'              => nil,
+      'client_port'              => :to_i,
+      'target_port'              => :to_i,
       'request_processing_time'  => :to_f,
       'target_processing_time'   => :to_f,
       'response_processing_time' => :to_f,
@@ -249,6 +249,15 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     parsed_access_log.each do |row|
       record = Hash[access_log_fields.keys.zip(row)]
 
+      split_address_port!(record, 'client')
+
+      case @elb_type
+      when 'clb'
+        split_address_port!(record, 'backend')
+      when 'alb'
+        split_address_port!(record, 'target')
+      end
+
       if @filter
         if @filter_operator == 'or'
           next if @filter.all? {|k, r| record[k] !~ r }
@@ -259,15 +268,6 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
       access_log_fields.each do |name, conv|
         record[name] = record[name].send(conv) if conv
-      end
-
-      split_address_port!(record, 'client')
-
-      case @elb_type
-      when 'clb'
-        split_address_port!(record, 'backend')
-      when 'alb'
-        split_address_port!(record, 'target')
       end
 
       parse_request!(record)
@@ -345,7 +345,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     return unless address_port
     address, port = address_port.split(':', 2)
     record[prefix] = address
-    record["#{prefix}_port"] = port.to_i
+    record["#{prefix}_port"] = port
   end
 
   def parse_request!(record)
