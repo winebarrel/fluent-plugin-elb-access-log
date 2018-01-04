@@ -302,6 +302,40 @@ describe Fluent::Plugin::ElbAccessLogInput do
         is_expected.to match_table expected_emits
       end
     end
+
+    context 'without type cast' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          type_cast: 'false',
+        }
+      end
+
+      it do
+        expected_emits_without_type_cast = expected_emits.map do |tag, ts, h|
+          h = Hash[h.map {|k, v|
+            v = case v
+                when nil
+                  v
+                when Float
+                  "%.6f" % v
+                else
+                  v.to_s
+                end
+
+            [k, v]
+          }]
+
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_without_type_cast
+      end
+    end
   end
 
   context 'when include bad URI' do

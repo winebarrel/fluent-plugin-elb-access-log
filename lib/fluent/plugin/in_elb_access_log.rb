@@ -81,6 +81,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :debug,             :bool,    default: false
   config_param :filter,            :hash,    default: nil
   config_param :filter_operator,   :string,  default: 'and'
+  config_param :type_cast,         :bool,    default: true
 
   def configure(conf)
     super
@@ -266,8 +267,10 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
         end
       end
 
-      access_log_fields.each do |name, conv|
-        record[name] = record[name].send(conv) if conv
+      if @type_cast
+        access_log_fields.each do |name, conv|
+          record[name] = record[name].send(conv) if conv
+        end
       end
 
       parse_request!(record)
@@ -362,7 +365,13 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
       if uri
         [:scheme ,:user, :host, :port, :path, :query, :fragment].each do |key|
-          record["request.uri.#{key}"] = uri.send(key)
+          value = uri.send(key)
+
+          if not @type_cast and key == :port
+            value = value.to_s
+          end
+
+          record["request.uri.#{key}"] = value
         end
       end
     rescue => e

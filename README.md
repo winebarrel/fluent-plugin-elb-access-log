@@ -50,6 +50,7 @@ Or install it yourself as:
   #elb_type clb # or alb
   #filter elb_status_code:^2,timestamp:^2018
   #filter_operator and # or "or"
+  #type_cast true
 </source>
 ```
 

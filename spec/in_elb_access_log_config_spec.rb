@@ -46,6 +46,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.elb_type).to eq 'clb'
       expect(driver.instance.filter).to be_nil
       expect(driver.instance.filter_operator).to eq 'and'
+      expect(driver.instance.type_cast).to be_truthy
     end
   end
 
@@ -91,6 +92,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
         elb_type: elb_type,
         filter: filter,
         filter_operator: filter_operator,
+        type_cast: 'false',
       }
     end
 
@@ -115,6 +117,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.elb_type).to eq elb_type
       expect(driver.instance.filter).to eq('elb_status_code' => /^2/)
       expect(driver.instance.filter_operator).to eq filter_operator
+      expect(driver.instance.type_cast).to be_falsey
     end
   end
 
