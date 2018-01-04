@@ -48,6 +48,7 @@ Or install it yourself as:
   #sampling_interval 1
   #debug false
   #elb_type clb # or alb
+  #filter elb_status_code:^2,timestamp:^2018
 </source>
 ```
 

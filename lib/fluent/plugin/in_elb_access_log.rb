@@ -79,6 +79,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :history_length,    :integer, default: 100
   config_param :sampling_interval, :integer, default: 1
   config_param :debug,             :bool,    default: false
+  config_param :filter,            :hash,    default: nil
 
   def configure(conf)
     super
@@ -102,6 +103,10 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
     end
 
     @history = load_history
+
+    if @filter
+      @filter = Hash[@filter.map {|k, v| [k.to_s, Regexp.new(v.to_s)] }]
+    end
   end
 
   def start
@@ -238,6 +243,10 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
     parsed_access_log.each do |row|
       record = Hash[access_log_fields.keys.zip(row)]
+
+      if @filter and @filter.any? {|k, r| record[k] !~ r }
+        next
+      end
 
       access_log_fields.each do |name, conv|
         record[name] = record[name].send(conv) if conv

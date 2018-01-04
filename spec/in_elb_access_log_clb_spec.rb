@@ -247,6 +247,24 @@ describe Fluent::Plugin::ElbAccessLogInput do
         is_expected.to match_table expected_emits
       end
     end
+
+    context 'with filter' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          filter: '{"timestamp": "2015-05-25"}'
+        }
+      end
+
+      it do
+        expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
   end
 
   context 'when include bad URI' do

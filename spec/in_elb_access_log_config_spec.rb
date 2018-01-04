@@ -44,6 +44,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.sampling_interval).to eq 1
       expect(driver.instance.debug).to be_falsey
       expect(driver.instance.elb_type).to eq 'clb'
+      expect(driver.instance.filter).to be_nil
     end
   end
 
@@ -63,6 +64,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
     let(:history_length) { 200 }
     let(:sampling_interval) { 100 }
     let(:elb_type) { 'alb' }
+    let(:filter) { 'elb_status_code:^2' }
 
     let(:fluentd_conf) do
       {
@@ -85,6 +87,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
         sampling_interval: sampling_interval,
         debug: true,
         elb_type: elb_type,
+        filter: filter,
       }
     end
 
@@ -107,6 +110,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.sampling_interval).to eq sampling_interval
       expect(driver.instance.debug).to be_truthy
       expect(driver.instance.elb_type).to eq elb_type
+      expect(driver.instance.filter).to eq('elb_status_code' => /^2/)
     end
   end
 

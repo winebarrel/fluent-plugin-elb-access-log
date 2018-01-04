@@ -275,6 +275,25 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
         is_expected.to match_table expected_emits
       end
     end
+
+    context 'with filter' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          filter: '{"timestamp": "2015-05-25"}'
+        }
+      end
+
+      it do
+        expected_emits.slice!(0, 2)
+        is_expected.to match_table expected_emits
+      end
+    end
   end
 
   context 'when include bad URI' do
