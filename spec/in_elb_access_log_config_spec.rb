@@ -48,6 +48,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.filter_operator).to eq 'and'
       expect(driver.instance.type_cast).to be_truthy
       expect(driver.instance.parse_request).to be_truthy
+      expect(driver.instance.split_addr_port).to be_truthy
     end
   end
 
@@ -95,6 +96,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
         filter_operator: filter_operator,
         type_cast: 'false',
         parse_request: 'false',
+        split_addr_port: 'false',
       }
     end
 
@@ -121,6 +123,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
       expect(driver.instance.filter_operator).to eq filter_operator
       expect(driver.instance.type_cast).to be_falsey
       expect(driver.instance.parse_request).to be_falsey
+      expect(driver.instance.split_addr_port).to be_falsey
     end
   end
 

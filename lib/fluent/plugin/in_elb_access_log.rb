@@ -83,6 +83,7 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   config_param :filter_operator,   :string,  default: 'and'
   config_param :type_cast,         :bool,    default: true
   config_param :parse_request,     :bool,    default: true
+  config_param :split_addr_port,   :bool,    default: true
 
   def configure(conf)
     super
@@ -270,7 +271,9 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
 
       if @type_cast
         access_log_fields.each do |name, conv|
-          record[name] = record[name].send(conv) if conv
+          if conv and (value = record[name])
+            record[name] = value.send(conv)
+          end
         end
       end
 
@@ -349,9 +352,15 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
   def split_address_port!(record, prefix)
     address_port = record["#{prefix}_port"]
     return unless address_port
-    address, port = address_port.split(':', 2)
-    record[prefix] = address
-    record["#{prefix}_port"] = port
+
+    if @split_addr_port
+      address, port = address_port.split(':', 2)
+      record[prefix] = address
+      record["#{prefix}_port"] = port
+    else
+      record[prefix] = address_port
+      record.delete("#{prefix}_port")
+    end
   end
 
   def parse_request!(record)
