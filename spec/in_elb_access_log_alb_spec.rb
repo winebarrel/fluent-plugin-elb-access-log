@@ -369,7 +369,6 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       end
     end
 
-
     context 'without request parsing' do
       let(:fluentd_conf) do
         {
@@ -386,6 +385,34 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
       it do
         expected_emits_without_request_parsing = expected_emits.map do |tag, ts, h|
           h = Hash[h.select {|k, v| k !~ /\Arequest\./ }]
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_without_request_parsing
+      end
+    end
+
+    context 'without addr/port splitting' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          elb_type: 'alb',
+          split_addr_port: 'false',
+        }
+      end
+
+      it do
+        expected_emits_without_request_parsing = expected_emits.map do |tag, ts, h|
+          h.keys.select {|k| k =~ /_port\z/ }.each do |prefix_port|
+            prefix, _ = prefix_port.split('_', 2)
+            h[prefix] = h[prefix] + ':' + h[prefix_port].to_s
+            h.delete(prefix_port)
+          end
+
           [tag, ts, h]
         end
 
