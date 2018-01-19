@@ -1,4 +1,4 @@
-describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
+describe 'FluentPluginElbAccessLogInput#configure' do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
   let(:region) { 'us-west-1' }
@@ -11,8 +11,8 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
     Timecop.freeze(today)
     allow(FileUtils).to receive(:touch)
     allow(File).to receive(:read) { nil }
-    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:load_history) { [] }
-    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
+    allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:parse_tsfile) { nil }
   end
 
   context 'when default' do
@@ -157,7 +157,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
     end
 
     before do
-      allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
+      allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
     end
 
     it do
@@ -179,7 +179,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#configure' do
     end
 
     before do
-      allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
+      allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:parse_tsfile) { Time.parse(tsfile_datetime) }
       allow_any_instance_of(Fluent::Test::TestLogger).to receive(:warn).with("start_datetime(#{start_datetime}) is set. but tsfile datetime(#{tsfile_datetime}) is used")
     end
 

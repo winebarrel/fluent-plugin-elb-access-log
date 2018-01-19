@@ -1,8 +1,13 @@
 require 'coveralls'
 Coveralls.wear!
 
+require 'fluent/version'
 require 'fluent/test'
-require 'fluent/test/driver/input'
+
+if Gem::Version.new(Fluent::VERSION) >= Gem::Version.new('0.14')
+  require 'fluent/test/driver/input'
+end
+
 require 'fluent/plugin/in_elb_access_log'
 
 require 'aws-sdk-s3'
@@ -40,7 +45,11 @@ region #{region}
 #{additional_options}
   EOS
 
-  Fluent::Test::Driver::Input.new(Fluent::Plugin::ElbAccessLogInput).configure(fluentd_conf)
+  if Gem::Version.new(Fluent::VERSION) >= Gem::Version.new('0.14')
+    Fluent::Test::Driver::Input.new(FluentPluginElbAccessLogInput).configure(fluentd_conf)
+  else
+    Fluent::Test::OutputTestDriver.new(FluentPluginElbAccessLogInput).configure(fluentd_conf)
+  end
 end
 
 def driver_run(driver)
@@ -48,6 +57,15 @@ def driver_run(driver)
     coolio_loop = driver.instance.instance_variable_get(:@loop)
     sleep 0.1 until coolio_loop.instance_variable_get(:@running)
     sleep 0.1
+  end
+end
+
+
+def driver_events
+  if Gem::Version.new(Fluent::VERSION) >= Gem::Version.new('0.14')
+    driver.events
+  else
+    driver.emits
   end
 end
 

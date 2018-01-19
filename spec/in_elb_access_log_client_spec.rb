@@ -1,4 +1,4 @@
-describe 'Fluent::Plugin::ElbAccessLogInput#client' do
+describe 'FluentPluginElbAccessLogInput#client' do
   let(:account_id) { '123456789012' }
   let(:s3_bucket) { 'my-bucket' }
   let(:region) { 'us-west-1' }
@@ -28,8 +28,8 @@ describe 'Fluent::Plugin::ElbAccessLogInput#client' do
 
   before do
     Timecop.freeze(today)
-    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:load_history) { [] }
-    allow_any_instance_of(Fluent::Plugin::ElbAccessLogInput).to receive(:parse_tsfile) { nil }
+    allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:load_history) { [] }
+    allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:parse_tsfile) { nil }
     expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
     expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) { [] }
     expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
@@ -48,7 +48,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#client' do
     specify do
       expect(Aws::S3::Client).to receive(:new).with(
         region: region,
-        user_agent_suffix: Fluent::Plugin::ElbAccessLogInput::USER_AGENT_SUFFIX,
+        user_agent_suffix: FluentPluginElbAccessLogInput::USER_AGENT_SUFFIX,
       ).and_return(client)
 
       driver_run(driver)
@@ -73,7 +73,7 @@ describe 'Fluent::Plugin::ElbAccessLogInput#client' do
     specify do
       expect(Aws::S3::Client).to receive(:new).with(
         region: region,
-        user_agent_suffix: Fluent::Plugin::ElbAccessLogInput::USER_AGENT_SUFFIX,
+        user_agent_suffix: FluentPluginElbAccessLogInput::USER_AGENT_SUFFIX,
         access_key_id: aws_key_id,
         secret_access_key: aws_sec_key,
       ).and_return(client)

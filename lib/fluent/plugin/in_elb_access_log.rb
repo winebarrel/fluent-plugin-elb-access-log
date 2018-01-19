@@ -9,7 +9,7 @@ require 'multiple_files_gzip_reader'
 require 'fluent/input'
 require 'fluent_plugin_elb_access_log/version'
 
-class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
+class FluentPluginElbAccessLogInput < Fluent::Input
   Fluent::Plugin.register_input('elb_access_log', self)
 
   USER_AGENT_SUFFIX = "fluent-plugin-elb-access-log/#{FluentPluginElbAccessLog::VERSION}"
@@ -473,4 +473,4 @@ class Fluent::Plugin::ElbAccessLogInput < Fluent::Input
       @log.error_backtrace(e.backtrace)
     end
   end # TimerWatcher
-end # Fluent::Plugin::ElbAccessLogInput
+end # FluentPluginElbAccessLogInput

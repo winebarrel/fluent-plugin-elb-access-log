@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'fluentd', '>= 0.14'
+  spec.add_dependency 'fluentd'
   spec.add_dependency 'aws-sdk-s3', '~> 1.8'
   spec.add_dependency 'addressable'
   spec.add_dependency 'multiple_files_gzip_reader'
@@ -29,4 +29,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'test-unit', '>= 3.1.0'
   spec.add_development_dependency 'rspec-match_table', '>= 0.1.1'
   spec.add_development_dependency 'coveralls'
+  spec.add_development_dependency 'appraisal', '>= 2.2'
 end
