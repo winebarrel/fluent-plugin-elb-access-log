@@ -11,5 +11,5 @@ script:
 - bundle install
 - bundle exec rake
 gemfile:
-  - gemfiles/fluentd_0.12.gemfile
-  - gemfiles/fluentd_0.14.gemfile
+- gemfiles/fluentd_0.12.gemfile
+- gemfiles/fluentd_0.14.gemfile
