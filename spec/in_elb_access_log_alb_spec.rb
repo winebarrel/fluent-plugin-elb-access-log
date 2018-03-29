@@ -45,9 +45,9 @@ describe FluentPluginElbAccessLogInput do
 
   context 'when access log does not exist' do
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
       expect(driver.instance).to_not receive(:save_timestamp).with(today)
       expect(driver.instance.log).to_not receive(:warn)
 
@@ -73,15 +73,15 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) do
         [double('yesterday_objects', contents: [double('yesterday_object', key: yesterday_object_key)])]
       end
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) do
         [double('tomorrow_objects', contents: [double('tomorrow_object', key: tomorrow_object_key)])]
       end
 
@@ -421,6 +421,142 @@ https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
   end
 
+  context 'with file_filter' do
+    let(:today_access_log) do
+      gzip(<<-EOS)
+https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+      EOS
+    end
+
+    let(:tomorrow_access_log) do
+      gzip(<<-EOS)
+https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+https 2015-05-25T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200 200 0 3 "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1" "curl/7.30.0" ssl_cipher ssl_protocol arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx "Root=xxx" "-" "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx"
+      EOS
+    end
+
+    before do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) do
+        [double('yesterday_objects', contents: [double('yesterday_object', key: yesterday_object_key)])]
+      end
+
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
+        [double('today_objects', contents: [double('today_object', key: today_object_key)])]
+      end
+
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) do
+        [double('tomorrow_objects', contents: [double('tomorrow_object', key: tomorrow_object_key)])]
+      end
+
+      expect(client).to receive(:get_object).with(bucket: s3_bucket, key: today_object_key) do
+        double('today_s3_object', body: StringIO.new(today_access_log))
+      end
+
+      expect(client).to_not receive(:get_object).with(bucket: s3_bucket, key: tomorrow_object_key) do
+        double('tomorrow_s3_object', body: StringIO.new(tomorrow_access_log))
+      end
+
+      expect(driver.instance).to receive(:save_timestamp).with(today)
+      expect(driver.instance.log).to_not receive(:warn)
+
+      driver_run(driver)
+    end
+
+    let(:expected_emits) do
+      [["elb.access_log",
+        Time.parse('2015-05-24 19:55:36 UTC').to_i,
+        {"type"=>"https",
+         "timestamp"=>"2015-05-24T19:55:36.000000Z",
+         "elb"=>"hoge",
+         "client_port"=>57673,
+         "target_port"=>80,
+         "request_processing_time"=>5.3e-05,
+         "target_processing_time"=>0.000913,
+         "response_processing_time"=>3.6e-05,
+         "elb_status_code"=>200,
+         "target_status_code"=>200,
+         "received_bytes"=>0,
+         "sent_bytes"=>3,
+         "request"=>
+          "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
+         "target_group_arn"=>
+          "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx",
+         "trace_id"=>"Root=xxx",
+         "domain_name"=>"-",
+         "chosen_cert_arn"=>
+          "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx",
+         "client"=>"14.14.124.20",
+         "target"=>"10.0.199.184",
+         "request.method"=>"GET",
+         "request.uri"=>
+          "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+         "request.http_version"=>"HTTP/1.1",
+         "request.uri.scheme"=>"http",
+         "request.uri.user"=>nil,
+         "request.uri.host"=>"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+         "request.uri.port"=>80,
+         "request.uri.path"=>"/",
+         "request.uri.query"=>nil,
+         "request.uri.fragment"=>nil}],
+       ["elb.access_log",
+        Time.parse('2015-05-24 19:55:36 UTC').to_i,
+        {"type"=>"https",
+         "timestamp"=>"2015-05-24T19:55:36.000000Z",
+         "elb"=>"hoge",
+         "client_port"=>57673,
+         "target_port"=>80,
+         "request_processing_time"=>5.3e-05,
+         "target_processing_time"=>0.000913,
+         "response_processing_time"=>3.6e-05,
+         "elb_status_code"=>200,
+         "target_status_code"=>200,
+         "received_bytes"=>0,
+         "sent_bytes"=>3,
+         "request"=>
+          "GET http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/ HTTP/1.1",
+         "user_agent"=>"curl/7.30.0",
+         "ssl_cipher"=>"ssl_cipher",
+         "ssl_protocol"=>"ssl_protocol",
+         "target_group_arn"=>
+          "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/app/xxx",
+         "trace_id"=>"Root=xxx",
+         "domain_name"=>"-",
+         "chosen_cert_arn"=>
+          "arn:aws:acm:ap-northeast-1:123456789012:certificate/xxx",
+         "client"=>"14.14.124.20",
+         "target"=>"10.0.199.184",
+         "request.method"=>"GET",
+         "request.uri"=>
+          "http://hoge-1876938939.ap-northeast-1.elb.amazonaws.com:80/",
+         "request.http_version"=>"HTTP/1.1",
+         "request.uri.scheme"=>"http",
+         "request.uri.user"=>nil,
+         "request.uri.host"=>"hoge-1876938939.ap-northeast-1.elb.amazonaws.com",
+         "request.uri.port"=>80,
+         "request.uri.path"=>"/",
+         "request.uri.query"=>nil,
+         "request.uri.fragment"=>nil}]]
+    end
+
+    let(:fluentd_conf) do
+      {
+        interval: 0,
+        account_id: account_id,
+        s3_bucket: s3_bucket,
+        region: region,
+        start_datetime: (today - 1).to_s,
+        elb_type: 'alb',
+        file_filter: today.iso8601,
+      }
+    end
+
+    it { is_expected.to match_table expected_emits }
+  end
+
   context 'when include bad URI' do
     let(:today_access_log) do
       gzip(<<-EOS)
@@ -429,10 +565,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -505,10 +641,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -577,10 +713,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     let(:today_object_key) { "#{today_prefix}#{account_id}_elasticloadbalancing_ap-northeast-1_hoge_#{(today - 600).iso8601}_52.68.51.1_8hSqR3o4.log.gz" }
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -646,10 +782,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -739,10 +875,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     let(:today_object_key) { "#{today_prefix}#{account_id}_elasticloadbalancing_ap-northeast-1_hoge_#{(today - 601).iso8601}_52.68.51.1_8hSqR3o4.log.gz" }
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -764,10 +900,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -794,10 +930,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     let(:history) { driver.instance.instance_variable_get(:@history) }
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -837,10 +973,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -906,10 +1042,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -933,10 +1069,10 @@ https xxx hoge 14.14.124.20:57673 10.0.199.184:80 0.000053 0.000913 0.000036 200
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 
@@ -962,10 +1098,10 @@ https 2015-05-24T19:55:36.000000Z hoge 14.14.124.20:57673 10.0.199.184:80 0.0000
     end
 
     before do
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
 
-      expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) do
+      expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) do
         [double('today_objects', contents: [double('today_object', key: today_object_key)])]
       end
 

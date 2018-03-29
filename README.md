@@ -53,6 +53,7 @@ Or install it yourself as:
   #type_cast true
   #parse_request true
   #split_addr_port true
+  #file_filter REGEXP
 </source>
 ```
 

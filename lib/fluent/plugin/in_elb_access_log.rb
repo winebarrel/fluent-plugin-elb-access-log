@@ -84,6 +84,7 @@ class FluentPluginElbAccessLogInput < Fluent::Input
   config_param :type_cast,         :bool,    default: true
   config_param :parse_request,     :bool,    default: true
   config_param :split_addr_port,   :bool,    default: true
+  config_param :file_filter,       :string,  default: nil
 
   def configure(conf)
     super
@@ -114,6 +115,10 @@ class FluentPluginElbAccessLogInput < Fluent::Input
 
     if @filter
       @filter = Hash[@filter.map {|k, v| [k.to_s, Regexp.new(v.to_s)] }]
+    end
+
+    if @file_filter
+      @file_filter = Regexp.new(@file_filter)
     end
   end
 
@@ -165,8 +170,12 @@ class FluentPluginElbAccessLogInput < Fluent::Input
     last_timestamp = timestamp
 
     prefixes(timestamp).each do |prefix|
-      client.list_objects(bucket: @s3_bucket, prefix: prefix).each do |page|
+      client.list_objects_v2(bucket: @s3_bucket, prefix: prefix).each do |page|
         page.contents.each do |obj|
+          if @file_filter and obj.key !~ @file_filter
+            next
+          end
+
           account_id, logfile_const, region, elb_name, logfile_datetime, ip, logfile_suffix = obj.key.split('_', 7)
           logfile_datetime = Time.parse(logfile_datetime)
 
