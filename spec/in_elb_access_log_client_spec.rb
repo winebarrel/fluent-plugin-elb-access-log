@@ -30,9 +30,9 @@ describe 'FluentPluginElbAccessLogInput#client' do
     Timecop.freeze(today)
     allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:load_history) { [] }
     allow_any_instance_of(FluentPluginElbAccessLogInput).to receive(:parse_tsfile) { nil }
-    expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
-    expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: today_prefix) { [] }
-    expect(client).to receive(:list_objects).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
+    expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: yesterday_prefix) { [] }
+    expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: today_prefix) { [] }
+    expect(client).to receive(:list_objects_v2).with(bucket: s3_bucket, prefix: tomorrow_prefix) { [] }
     allow(FileUtils).to receive(:touch)
     expect(driver.instance).to_not receive(:save_timestamp).with(today)
     expect(driver.instance).to receive(:save_history)
