@@ -85,6 +85,7 @@ class FluentPluginElbAccessLogInput < Fluent::Input
   config_param :parse_request,     :bool,    default: true
   config_param :split_addr_port,   :bool,    default: true
   config_param :file_filter,       :string,  default: nil
+  config_param :request_separator, :string,  default: '.'
 
   def configure(conf)
     super
@@ -377,9 +378,9 @@ class FluentPluginElbAccessLogInput < Fluent::Input
     return unless request
     method, uri, http_version = request.split(' ', 3)
 
-    record['request.method'] = method
-    record['request.uri'] = uri
-    record['request.http_version'] = http_version
+    record["request#{@request_separator}method"] = method
+    record["request#{@request_separator}uri"] = uri
+    record["request#{@request_separator}http_version"] = http_version
 
     begin
       uri = Addressable::URI.parse(uri)
@@ -392,7 +393,7 @@ class FluentPluginElbAccessLogInput < Fluent::Input
             value = value.to_s
           end
 
-          record["request.uri.#{key}"] = value
+          record["request#{@request_separator}uri#{@request_separator}#{key}"] = value
         end
       end
     rescue => e

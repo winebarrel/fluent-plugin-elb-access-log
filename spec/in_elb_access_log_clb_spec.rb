@@ -385,6 +385,28 @@ describe FluentPluginElbAccessLogInput do
         is_expected.to match_table expected_emits_without_request_parsing
       end
     end
+
+    context 'with request_separator' do
+      let(:fluentd_conf) do
+        {
+          interval: 0,
+          account_id: account_id,
+          s3_bucket: s3_bucket,
+          region: region,
+          start_datetime: (today - 1).to_s,
+          request_separator: '_'
+        }
+      end
+
+      it do
+        expected_emits_with_underscore = expected_emits.map do |tag, ts, h|
+          h = Hash[h.map {|k, v| [k.gsub('.', '_'), v] }]
+          [tag, ts, h]
+        end
+
+        is_expected.to match_table expected_emits_with_underscore
+      end
+    end
   end
 
   context 'with file_filter' do

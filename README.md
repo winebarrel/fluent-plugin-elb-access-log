@@ -54,6 +54,7 @@ Or install it yourself as:
   #parse_request true
   #split_addr_port true
   #file_filter REGEXP
+  #request_separator .
 </source>
 ```
 
