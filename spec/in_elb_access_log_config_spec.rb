@@ -50,6 +50,8 @@ describe 'FluentPluginElbAccessLogInput#configure' do
       expect(driver.instance.parse_request).to be_truthy
       expect(driver.instance.split_addr_port).to be_truthy
       expect(driver.instance.filter).to be_nil
+      expect(driver.instance.file_filter).to be_nil
+      expect(driver.instance.request_separator).to eq '.'
     end
   end
 
@@ -72,6 +74,7 @@ describe 'FluentPluginElbAccessLogInput#configure' do
     let(:filter) { 'elb_status_code:^2' }
     let(:filter_operator) { 'or' }
     let(:file_filter) { '.*my-elb.*' }
+    let(:request_separator) { '_' }
 
     let(:fluentd_conf) do
       {
@@ -100,6 +103,7 @@ describe 'FluentPluginElbAccessLogInput#configure' do
         parse_request: 'false',
         split_addr_port: 'false',
         file_filter: file_filter,
+        request_separator: request_separator,
       }
     end
 
@@ -128,6 +132,7 @@ describe 'FluentPluginElbAccessLogInput#configure' do
       expect(driver.instance.parse_request).to be_falsey
       expect(driver.instance.split_addr_port).to be_falsey
       expect(driver.instance.file_filter).to eq Regexp.new(file_filter)
+      expect(driver.instance.request_separator).to eq request_separator
     end
   end
 
